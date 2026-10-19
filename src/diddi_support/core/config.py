@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     identity_jwks_url: str = ""
     identity_issuer: str = "diddifree-id"
     service_audience: str = "diddi-support"
+    backoffice_audience: str = "diddi-comms-backoffice"
     database_url: str = ""
     redis_url: str = ""
     context_connectors_json: str = ""

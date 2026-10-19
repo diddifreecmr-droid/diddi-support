@@ -15,7 +15,9 @@ from diddi_support.application.context import (
     ContextService,
 )
 from diddi_support.core.auth import (
+    BackofficePrincipal,
     ServicePrincipal,
+    require_support_agent,
     require_support_service,
 )
 from diddi_support.core.database import get_session_optional
@@ -28,11 +30,13 @@ from diddi_support.domain.cases import (
 from diddi_support.infrastructure.context.http import providers_from_settings
 
 router = APIRouter(prefix="/support/v1/internal", tags=["internal-support"])
+backoffice_router = APIRouter(prefix="/support/v1/backoffice", tags=["backoffice-support"])
 repository = InMemorySupportCaseRepository()
 case_service = SupportCaseService(repository)
 context_service = ContextService(providers_from_settings())
 CREATE_CASE_SCOPE = "diddi-support:cases:create"
 READ_CONTEXT_SCOPE = "diddi-support:cases:read"
+BACKOFFICE_READ_PERMISSION = "diddi-support:read"
 
 
 class CreateCaseRequest(BaseModel):
@@ -180,6 +184,27 @@ async def get_case_context(
     if READ_CONTEXT_SCOPE not in principal.scopes:
         raise HTTPException(status_code=403, detail={"code": "SERVICE_SCOPE_FORBIDDEN"})
 
+    return await _read_case_context(case_id=case_id, request=request, session=session)
+
+
+@backoffice_router.get("/cases/{case_id}/context", response_model=CaseContextResponse)
+async def get_backoffice_case_context(
+    case_id: UUID,
+    request: Request,
+    principal: BackofficePrincipal = Depends(require_support_agent),
+    session: AsyncSession | None = Depends(get_session_optional),
+) -> CaseContextResponse:
+    if BACKOFFICE_READ_PERMISSION not in principal.permissions:
+        raise HTTPException(status_code=403, detail={"code": "BACKOFFICE_PERMISSION_FORBIDDEN"})
+    return await _read_case_context(case_id=case_id, request=request, session=session)
+
+
+async def _read_case_context(
+    *,
+    case_id: UUID,
+    request: Request,
+    session: AsyncSession | None,
+) -> CaseContextResponse:
     if session is None:
         case = case_service.repository.get(case_id)
     else:

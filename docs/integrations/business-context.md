@@ -59,6 +59,18 @@ Cette variante lit la référence métier enregistrée dans le dossier, puis
 interroge le propriétaire avec le même contrat. Le dossier et son contexte
 sont renvoyés ensemble.
 
+## Accès Backoffice
+
+Le Backoffice utilise une identité utilisateur distincte des modules métier :
+
+```text
+GET /support/v1/backoffice/cases/{case_id}/context
+Authorization: Bearer <agent-user-token>
+```
+
+Le JWT doit être actif, avoir l’audience configurée par
+`BACKOFFICE_AUDIENCE` et contenir la permission `diddi-support:read`.
+
 Réponses principales : `404` si aucun connecteur ou contexte n’est disponible,
 `503` si le module propriétaire est indisponible, et `403` si la permission
 manque. DiddiSupport ne met pas encore ces réponses en cache afin d’éviter de

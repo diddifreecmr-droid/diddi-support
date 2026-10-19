@@ -32,3 +32,4 @@ documentation, validation Docker et redeploiement.
 - `CONTEXT_REQUEST_TIMEOUT_SECONDS` : timeout de lecture des contextes métier.
 - `CONTEXT_AUTH_TOKEN` et `CONTEXT_CLIENT_ID` : identité sortante de
   DiddiSupport vers les modules propriétaires. Le token reste un secret.
+- `BACKOFFICE_AUDIENCE` : audience JWT attendue pour les agents du Backoffice.

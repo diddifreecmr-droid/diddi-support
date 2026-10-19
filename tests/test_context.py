@@ -10,7 +10,12 @@ from diddi_support.application.context import (
     ContextProviderUnavailableError,
     ContextService,
 )
-from diddi_support.core.auth import ServicePrincipal, require_support_service
+from diddi_support.core.auth import (
+    BackofficePrincipal,
+    ServicePrincipal,
+    require_support_agent,
+    require_support_service,
+)
 from diddi_support.infrastructure.context.http import HttpContextProvider
 from diddi_support.main import app
 from diddi_support.presentation import internal_router
@@ -165,3 +170,57 @@ def test_case_context_endpoint_resolves_case_reference() -> None:
     finally:
         internal_router.context_service = original_service
         app.dependency_overrides.pop(require_support_service, None)
+
+
+def test_backoffice_context_endpoint_enforces_agent_permission() -> None:
+    case, _ = internal_router.case_service.open_case(
+        origin_service="diddigo",
+        resource_type="ride",
+        resource_id=RIDE_ID,
+        reporter_user_id=UUID("22222222-2222-2222-2222-222222222222"),
+        category="safety",
+        subject="Backoffice context",
+        idempotency_key="context-case-backoffice-1",
+    )
+
+    class FakeProvider:
+        async def fetch(self, **_: object) -> BusinessContext:
+            return BusinessContext(
+                protocol="diddi.context.v1",
+                origin_service="diddigo",
+                resource_type="ride",
+                resource_id=RIDE_ID,
+                data={"status": "in_progress"},
+            )
+
+    original_service = internal_router.context_service
+    internal_router.context_service = ContextService({"diddigo": FakeProvider()})
+    app.dependency_overrides[require_support_agent] = lambda: BackofficePrincipal(
+        subject="agent-1",
+        permissions=frozenset({"diddi-support:read"}),
+    )
+    try:
+        response = TestClient(app).get(
+            f"/support/v1/backoffice/cases/{case.id}/context",
+            headers={"X-Request-ID": "req-agent-1"},
+        )
+        assert response.status_code == 200
+        assert response.json()["context"]["data"]["status"] == "in_progress"
+    finally:
+        internal_router.context_service = original_service
+        app.dependency_overrides.pop(require_support_agent, None)
+
+
+def test_backoffice_context_endpoint_rejects_missing_permission() -> None:
+    app.dependency_overrides[require_support_agent] = lambda: BackofficePrincipal(
+        subject="agent-2",
+        permissions=frozenset(),
+    )
+    try:
+        response = TestClient(app).get(
+            "/support/v1/backoffice/cases/11111111-1111-1111-1111-111111111111/context",
+        )
+        assert response.status_code == 403
+        assert response.json()["detail"]["code"] == "BACKOFFICE_PERMISSION_FORBIDDEN"
+    finally:
+        app.dependency_overrides.pop(require_support_agent, None)

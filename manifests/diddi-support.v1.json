@@ -129,6 +129,15 @@
         "required_scope": "diddi-support:cases:read"
       }
     ],
+    "backoffice_routes": [
+      {
+        "method": "GET",
+        "path": "/support/v1/backoffice/cases/{case_id}/context",
+        "operation": "read_case_with_business_context",
+        "auth": "user_jwt",
+        "required_permission": "diddi-support:read"
+      }
+    ],
     "context_routes_expected_from_owner": [
       {
         "method": "GET",
