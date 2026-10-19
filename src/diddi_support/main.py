@@ -3,11 +3,19 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
+from diddi_support.core.auth import ServiceAuthenticationError
 from diddi_support.core.config import settings
 from diddi_support.core.manifest import load_manifest
+from diddi_support.presentation.internal_router import router as internal_router
 
 manifest = load_manifest(Path(settings.manifest_path))
 app = FastAPI(title=settings.app_name, version=manifest.version)
+app.include_router(internal_router)
+
+
+@app.exception_handler(ServiceAuthenticationError)
+def service_authentication_error_handler(_, exc: ServiceAuthenticationError) -> JSONResponse:
+    return JSONResponse(status_code=401, content={"detail": {"code": str(exc)}})
 
 
 @app.get("/health/live", tags=["health"])

@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     port: int = Field(default=8050, ge=1, le=65535)
     require_dependencies: bool = False
     manifest_path: str = "manifests/diddi-support.v1.json"
+    identity_jwks_url: str = ""
+    identity_issuer: str = "diddifree-id"
+    service_audience: str = "diddi-support"
     database_url: str = ""
     redis_url: str = ""
 
@@ -23,4 +26,3 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
-

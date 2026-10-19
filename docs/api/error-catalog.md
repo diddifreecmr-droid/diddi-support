@@ -12,4 +12,5 @@
 | `ATTACHMENT_NOT_AUTHORIZED` | Pièce non autorisée |
 | `ACTION_RESULT_UNKNOWN` | Résultat distant non confirmé |
 | `SOS_ALREADY_ACKNOWLEDGED` | SOS déjà pris en charge |
-
+| `IDEMPOTENCY_KEY_REQUIRED` | Clé d'idempotence absente |
+| `SERVICE_ORIGIN_FORBIDDEN` | Le service n'est pas propriétaire de l'origine annoncée |
