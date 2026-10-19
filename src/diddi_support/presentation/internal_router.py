@@ -4,11 +4,14 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from diddi_support.application.cases import PersistentSupportCaseService
 from diddi_support.core.auth import (
     ServicePrincipal,
     require_support_service,
 )
+from diddi_support.core.database import get_session_optional
 from diddi_support.domain.cases import (
     CasePriority,
     DomainConflictError,
@@ -51,11 +54,12 @@ class CaseResponse(BaseModel):
 
 
 @router.post("/cases", response_model=CaseResponse, status_code=status.HTTP_201_CREATED)
-def create_case(
+async def create_case(
     payload: CreateCaseRequest,
     request: Request,
     idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
     principal: ServicePrincipal = Depends(require_support_service),
+    session: AsyncSession | None = Depends(get_session_optional),
 ) -> CaseResponse:
     if CREATE_CASE_SCOPE not in principal.scopes:
         raise HTTPException(status_code=403, detail={"code": "SERVICE_SCOPE_FORBIDDEN"})
@@ -65,18 +69,32 @@ def create_case(
         raise HTTPException(status_code=400, detail={"code": "IDEMPOTENCY_KEY_REQUIRED"})
 
     try:
-        case, created = case_service.open_case(
-            origin_service=payload.origin_service,
-            resource_type=payload.resource_type,
-            resource_id=payload.resource_id,
-            reporter_user_id=payload.reporter_user_id,
-            category=payload.category,
-            subject=payload.subject,
-            origin_report_id=payload.origin_report_id,
-            priority=payload.priority,
-            idempotency_key=idempotency_key,
-            request_id=request.headers.get("X-Request-ID"),
-        )
+        if session is None:
+            case, created = case_service.open_case(
+                origin_service=payload.origin_service,
+                resource_type=payload.resource_type,
+                resource_id=payload.resource_id,
+                reporter_user_id=payload.reporter_user_id,
+                category=payload.category,
+                subject=payload.subject,
+                origin_report_id=payload.origin_report_id,
+                priority=payload.priority,
+                idempotency_key=idempotency_key,
+                request_id=request.headers.get("X-Request-ID"),
+            )
+        else:
+            case, created = await PersistentSupportCaseService(session).open_case(
+                origin_service=payload.origin_service,
+                resource_type=payload.resource_type,
+                resource_id=payload.resource_id,
+                reporter_user_id=payload.reporter_user_id,
+                category=payload.category,
+                subject=payload.subject,
+                origin_report_id=payload.origin_report_id,
+                priority=payload.priority,
+                idempotency_key=idempotency_key,
+                request_id=request.headers.get("X-Request-ID"),
+            )
     except DomainConflictError as exc:
         raise HTTPException(status_code=409, detail={"code": str(exc)}) from exc
 

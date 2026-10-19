@@ -3,6 +3,10 @@ services:
     build: .
     ports:
       - "8050:8050"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://diddi_support:diddi_support@postgres:5432/diddi_support
+      REDIS_URL: redis://redis:6379/0
+      REQUIRE_DEPENDENCIES: "true"
     env_file:
       - path: .env
         required: false
