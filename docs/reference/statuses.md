@@ -10,6 +10,18 @@ open → in_progress → waiting_user
 
 L'affectation à un agent est indépendante du statut.
 
+Transitions autorisées :
+
+```text
+open            → in_progress | waiting_user | waiting_internal
+in_progress     → waiting_user | waiting_internal | resolved
+waiting_user    → in_progress | resolved
+waiting_internal→ in_progress | resolved
+resolved        → closed | in_progress
+closed          → aucune transition
+```
+
+
 ## SOS
 
 L'état de notification et l'état de prise en charge sont séparés.
@@ -21,4 +33,3 @@ handling:     unacknowledged → acknowledged → in_progress → completed
 
 Les transitions sont des règles versionnées et ne sont pas configurées par
 une simple variable d'environnement.
-
