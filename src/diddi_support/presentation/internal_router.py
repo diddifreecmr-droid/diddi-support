@@ -63,6 +63,27 @@ class CaseResponse(BaseModel):
     created: bool
 
 
+class CaseSnapshot(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: UUID
+    origin_service: str
+    resource_type: str
+    resource_id: UUID
+    reporter_user_id: UUID
+    category: str
+    subject: str
+    priority: CasePriority
+    status: str
+
+
+class CaseContextResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    case: CaseSnapshot
+    context: BusinessContext
+
+
 @router.post("/cases", response_model=CaseResponse, status_code=status.HTTP_201_CREATED)
 async def create_case(
     payload: CreateCaseRequest,
@@ -147,3 +168,48 @@ async def get_business_context(
         raise HTTPException(status_code=404, detail={"code": str(exc)}) from exc
     except ContextProviderUnavailableError as exc:
         raise HTTPException(status_code=503, detail={"code": str(exc)}) from exc
+
+
+@router.get("/cases/{case_id}/context", response_model=CaseContextResponse)
+async def get_case_context(
+    case_id: UUID,
+    request: Request,
+    principal: ServicePrincipal = Depends(require_support_service),
+    session: AsyncSession | None = Depends(get_session_optional),
+) -> CaseContextResponse:
+    if READ_CONTEXT_SCOPE not in principal.scopes:
+        raise HTTPException(status_code=403, detail={"code": "SERVICE_SCOPE_FORBIDDEN"})
+
+    if session is None:
+        case = case_service.repository.get(case_id)
+    else:
+        case = await PersistentSupportCaseService(session).get(case_id)
+    if case is None:
+        raise HTTPException(status_code=404, detail={"code": "CASE_NOT_FOUND"})
+
+    try:
+        context = await context_service.get_context(
+            origin_service=case.origin_service,
+            resource_type=case.resource_type,
+            resource_id=case.resource_id,
+            request_id=request.headers.get("X-Request-ID"),
+        )
+    except (ContextNotConfiguredError, ContextNotFoundError) as exc:
+        raise HTTPException(status_code=404, detail={"code": str(exc)}) from exc
+    except ContextProviderUnavailableError as exc:
+        raise HTTPException(status_code=503, detail={"code": str(exc)}) from exc
+
+    return CaseContextResponse(
+        case=CaseSnapshot(
+            id=case.id,
+            origin_service=case.origin_service,
+            resource_type=case.resource_type,
+            resource_id=case.resource_id,
+            reporter_user_id=case.reporter_user_id,
+            category=case.category,
+            subject=case.subject,
+            priority=case.priority,
+            status=case.status.value,
+        ),
+        context=context,
+    )

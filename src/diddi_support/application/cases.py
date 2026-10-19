@@ -54,3 +54,5 @@ class PersistentSupportCaseService:
             request_id=request_id,
         )
 
+    async def get(self, case_id: UUID) -> SupportCase | None:
+        return await self.repository.get(case_id)

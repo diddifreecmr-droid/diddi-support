@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from typing import Any
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
@@ -19,6 +20,10 @@ from diddi_support.infrastructure.persistence.models import (
 class PostgresSupportCaseRepository:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
+
+    async def get(self, case_id: UUID) -> SupportCase | None:
+        model = await self.session.get(SupportCaseModel, case_id)
+        return _to_domain(model) if model is not None else None
 
     async def create_or_get(
         self,

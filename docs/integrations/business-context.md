@@ -49,6 +49,16 @@ GET /support/v1/internal/context/{origin_service}/{resource_type}/{resource_id}
 
 Permission requise : `diddi-support:cases:read`.
 
+Pour charger directement le contexte lié à un dossier existant :
+
+```text
+GET /support/v1/internal/cases/{case_id}/context
+```
+
+Cette variante lit la référence métier enregistrée dans le dossier, puis
+interroge le propriétaire avec le même contrat. Le dossier et son contexte
+sont renvoyés ensemble.
+
 Réponses principales : `404` si aucun connecteur ou contexte n’est disponible,
 `503` si le module propriétaire est indisponible, et `403` si la permission
 manque. DiddiSupport ne met pas encore ces réponses en cache afin d’éviter de

@@ -127,3 +127,41 @@ def test_internal_context_endpoint_requires_read_scope() -> None:
         assert response.json()["detail"]["code"] == "SERVICE_SCOPE_FORBIDDEN"
     finally:
         app.dependency_overrides.pop(require_support_service, None)
+
+
+def test_case_context_endpoint_resolves_case_reference() -> None:
+    case, _ = internal_router.case_service.open_case(
+        origin_service="diddigo",
+        resource_type="ride",
+        resource_id=RIDE_ID,
+        reporter_user_id=UUID("22222222-2222-2222-2222-222222222222"),
+        category="safety",
+        subject="Unsafe ride",
+        idempotency_key="context-case-1",
+    )
+
+    class FakeProvider:
+        async def fetch(self, **_: object) -> BusinessContext:
+            return BusinessContext(
+                protocol="diddi.context.v1",
+                origin_service="diddigo",
+                resource_type="ride",
+                resource_id=RIDE_ID,
+                data={"status": "completed", "driver": {"id": "driver-1"}},
+            )
+
+    original_service = internal_router.context_service
+    internal_router.context_service = ContextService({"diddigo": FakeProvider()})
+    app.dependency_overrides[require_support_service] = lambda: ServicePrincipal(
+        subject="service:diddicomms",
+        client_id="diddicomms-support",
+        scopes=frozenset({"diddi-support:cases:read"}),
+    )
+    try:
+        response = TestClient(app).get(f"/support/v1/internal/cases/{case.id}/context")
+        assert response.status_code == 200
+        assert response.json()["case"]["id"] == str(case.id)
+        assert response.json()["context"]["data"]["status"] == "completed"
+    finally:
+        internal_router.context_service = original_service
+        app.dependency_overrides.pop(require_support_service, None)
