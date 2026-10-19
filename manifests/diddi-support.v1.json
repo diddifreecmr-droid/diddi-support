@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "protocol": "diddi.module.v1",
+  "module": "diddi-support",
+  "version": "1.0",
+  "status": "proposed",
+  "display_name": "DiddiSupport",
+  "runtime": {
+    "current_host": "diddicomms",
+    "extraction_allowed": true,
+    "separate_service_allowed_later": true,
+    "source_of_truth": "diddi-support"
+  },
+  "ownership": {
+    "owns": [
+      "support_cases",
+      "support_messages",
+      "support_assignments",
+      "support_priorities",
+      "support_actions",
+      "support_sos_state",
+      "support_audit_history"
+    ],
+    "does_not_own": [
+      "rides",
+      "orders",
+      "deliveries",
+      "identities",
+      "binary_file_storage",
+      "payment_execution"
+    ]
+  },
+  "identity": {
+    "audience": "diddi-support",
+    "issuer": "diddifree-id",
+    "required_service_claims": {
+      "token_type": "service",
+      "status": "active"
+    },
+    "required_headers": [
+      "Authorization",
+      "X-Client-ID",
+      "X-Request-ID"
+    ],
+    "scopes": [
+      "diddi-support:cases:create",
+      "diddi-support:cases:read",
+      "diddi-support:cases:write",
+      "diddi-support:messages:write",
+      "diddi-support:attachments:read",
+      "diddi-support:sos:create",
+      "diddi-support:sos:operate",
+      "diddi-support:audit:read"
+    ]
+  },
+  "resource_reference": {
+    "required_fields": [
+      "origin_service",
+      "resource_type",
+      "resource_id"
+    ],
+    "optional_fields": [
+      "origin_report_id"
+    ],
+    "supported_resources": [
+      {
+        "origin_service": "diddigo",
+        "resource_type": "ride",
+        "context_scope": "diddigo:support-context:read"
+      },
+      {
+        "origin_service": "diddifood",
+        "resource_type": "order",
+        "context_scope": "diddifood:support-context:read",
+        "status": "future"
+      },
+      {
+        "origin_service": "diddisend",
+        "resource_type": "delivery",
+        "context_scope": "diddisend:support-context:read",
+        "status": "future"
+      }
+    ]
+  },
+  "http": {
+    "user_routes": [
+      {
+        "method": "POST",
+        "path": "/comms/v1/support/cases",
+        "operation": "create_case",
+        "auth": "user_jwt",
+        "idempotency": "required"
+      },
+      {
+        "method": "GET",
+        "path": "/comms/v1/support/cases/{case_id}",
+        "operation": "read_case",
+        "auth": "user_jwt"
+      },
+      {
+        "method": "POST",
+        "path": "/comms/v1/support/cases/{case_id}/messages",
+        "operation": "send_user_message",
+        "auth": "user_jwt",
+        "idempotency": "required"
+      }
+    ],
+    "internal_routes": [
+      {
+        "method": "POST",
+        "path": "/support/v1/internal/cases",
+        "operation": "create_case_from_owner_module",
+        "auth": "service_jwt",
+        "required_scope": "diddi-support:cases:create",
+        "idempotency": "required"
+      }
+    ],
+    "context_routes_expected_from_owner": [
+      {
+        "method": "GET",
+        "path": "/internal/v1/support/{resource_type}/{resource_id}/context",
+        "operation": "read_limited_business_context",
+        "caller_scope_pattern": "{owner}:support-context:read"
+      }
+    ]
+  },
+  "events": {
+    "delivery": "at_least_once",
+    "deduplication_key": "event_id",
+    "events": [
+      "support.case.created",
+      "support.case.updated",
+      "support.case.assigned",
+      "support.case.message.created",
+      "support.case.resolved",
+      "support.sos.created",
+      "support.sos.acknowledged",
+      "support.sos.escalated",
+      "support.action.requested",
+      "support.action.completed",
+      "support.action.failed"
+    ]
+  },
+  "attachments": {
+    "provider": "diddifiles",
+    "file_reference": "file_id_only",
+    "purposes": [
+      "diddisupport_case_photo",
+      "diddisupport_case_voice",
+      "diddisupport_case_document"
+    ],
+    "public_urls_allowed": false,
+    "temporary_access_required": true
+  },
+  "reliability": {
+    "transactional_outbox": true,
+    "inbox_deduplication": true,
+    "retry_after_timeout": "recover_original_operation",
+    "websocket_is_source_of_truth": false,
+    "ai_outage_must_preserve_case_creation": true,
+    "chat_outage_must_preserve_case_creation": true
+  },
+  "backoffice": {
+    "integration": "diddicomms",
+    "required_resources": [
+      "support_case_queue",
+      "support_sos_queue",
+      "support_case_detail",
+      "support_action_history"
+    ],
+    "required_permissions": [
+      "diddi-support:read",
+      "diddi-support:reply",
+      "diddi-support:assign",
+      "diddi-support:sos-operate",
+      "diddi-support:attachments-read",
+      "diddi-support:audit-read"
+    ]
+  },
+  "compatibility": {
+    "manifest_distribution": "git_versioned",
+    "public_discovery_endpoint": false,
+    "breaking_change": "new_major_manifest_version",
+    "contract_tests_required": true
+  }
+}

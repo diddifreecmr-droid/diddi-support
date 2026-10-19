@@ -1,0 +1,26 @@
+services:
+  support:
+    build: .
+    ports:
+      - "8050:8050"
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: diddi_support
+      POSTGRES_USER: diddi_support
+      POSTGRES_PASSWORD: diddi_support
+    volumes:
+      - support_postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+
+volumes:
+  support_postgres_data:
