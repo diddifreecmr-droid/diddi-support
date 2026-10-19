@@ -24,3 +24,11 @@ Les règles suivantes ne sont pas des variables facilement modifiables :
 Une modification de ces règles exige code ou contrat versionné, tests,
 documentation, validation Docker et redeploiement.
 
+## Contexte métier
+
+- `CONTEXT_CONNECTORS_JSON` : mapping JSON des modules propriétaires capables
+  de fournir un contexte support, par exemple
+  `{ "diddigo": { "base_url": "http://diddigo:8040", "scope": "diddigo:support-context:read" } }`.
+- `CONTEXT_REQUEST_TIMEOUT_SECONDS` : timeout de lecture des contextes métier.
+- `CONTEXT_AUTH_TOKEN` et `CONTEXT_CLIENT_ID` : identité sortante de
+  DiddiSupport vers les modules propriétaires. Le token reste un secret.

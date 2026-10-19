@@ -113,6 +113,13 @@
         "auth": "service_jwt",
         "required_scope": "diddi-support:cases:create",
         "idempotency": "required"
+      },
+      {
+        "method": "GET",
+        "path": "/support/v1/internal/context/{origin_service}/{resource_type}/{resource_id}",
+        "operation": "read_business_context",
+        "auth": "service_jwt",
+        "required_scope": "diddi-support:cases:read"
       }
     ],
     "context_routes_expected_from_owner": [

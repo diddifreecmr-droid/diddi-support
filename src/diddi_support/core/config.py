@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     service_audience: str = "diddi-support"
     database_url: str = ""
     redis_url: str = ""
+    context_connectors_json: str = ""
+    context_request_timeout_seconds: float = Field(default=3.0, gt=0, le=30)
+    context_auth_token: str = ""
+    context_client_id: str = ""
 
 
 @lru_cache

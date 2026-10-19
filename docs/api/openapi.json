@@ -96,6 +96,99 @@
         }
       }
     },
+    "/support/v1/internal/context/{origin_service}/{resource_type}/{resource_id}": {
+      "get": {
+        "tags": [
+          "internal-support"
+        ],
+        "summary": "Get Business Context",
+        "operationId": "get_business_context_support_v1_internal_context__origin_service___resource_type___resource_id__get",
+        "parameters": [
+          {
+            "name": "origin_service",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Origin Service"
+            }
+          },
+          {
+            "name": "resource_type",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Resource Type"
+            }
+          },
+          {
+            "name": "resource_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Resource Id"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Client-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Client-Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BusinessContext"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health/live": {
       "get": {
         "tags": [
@@ -168,6 +261,52 @@
   },
   "components": {
     "schemas": {
+      "BusinessContext": {
+        "properties": {
+          "protocol": {
+            "type": "string",
+            "pattern": "^diddi\\.context\\.v1$",
+            "title": "Protocol"
+          },
+          "origin_service": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{1,63}$",
+            "title": "Origin Service"
+          },
+          "resource_type": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]{1,63}$",
+            "title": "Resource Type"
+          },
+          "resource_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Resource Id"
+          },
+          "data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Data"
+          },
+          "redacted_fields": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Redacted Fields"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "protocol",
+          "origin_service",
+          "resource_type",
+          "resource_id",
+          "data"
+        ],
+        "title": "BusinessContext"
+      },
       "CasePriority": {
         "type": "string",
         "enum": [
@@ -357,4 +496,4 @@
       }
     }
   }
-}\n
+}

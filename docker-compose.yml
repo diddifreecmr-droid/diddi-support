@@ -7,6 +7,10 @@ services:
       DATABASE_URL: postgresql+asyncpg://diddi_support:diddi_support@postgres:5432/diddi_support
       REDIS_URL: redis://redis:6379/0
       REQUIRE_DEPENDENCIES: "true"
+      CONTEXT_CONNECTORS_JSON: ${CONTEXT_CONNECTORS_JSON:-{}}
+      CONTEXT_REQUEST_TIMEOUT_SECONDS: ${CONTEXT_REQUEST_TIMEOUT_SECONDS:-3}
+      CONTEXT_AUTH_TOKEN: ${CONTEXT_AUTH_TOKEN:-}
+      CONTEXT_CLIENT_ID: ${CONTEXT_CLIENT_ID:-}
     env_file:
       - path: .env
         required: false

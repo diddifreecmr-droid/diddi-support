@@ -7,6 +7,13 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from diddi_support.application.cases import PersistentSupportCaseService
+from diddi_support.application.context import (
+    BusinessContext,
+    ContextNotConfiguredError,
+    ContextNotFoundError,
+    ContextProviderUnavailableError,
+    ContextService,
+)
 from diddi_support.core.auth import (
     ServicePrincipal,
     require_support_service,
@@ -18,11 +25,14 @@ from diddi_support.domain.cases import (
     InMemorySupportCaseRepository,
     SupportCaseService,
 )
+from diddi_support.infrastructure.context.http import providers_from_settings
 
 router = APIRouter(prefix="/support/v1/internal", tags=["internal-support"])
 repository = InMemorySupportCaseRepository()
 case_service = SupportCaseService(repository)
+context_service = ContextService(providers_from_settings())
 CREATE_CASE_SCOPE = "diddi-support:cases:create"
+READ_CONTEXT_SCOPE = "diddi-support:cases:read"
 
 
 class CreateCaseRequest(BaseModel):
@@ -110,3 +120,30 @@ async def create_case(
         status=case.status.value,
         created=created,
     )
+
+
+@router.get(
+    "/context/{origin_service}/{resource_type}/{resource_id}",
+    response_model=BusinessContext,
+)
+async def get_business_context(
+    origin_service: str,
+    resource_type: str,
+    resource_id: UUID,
+    request: Request,
+    principal: ServicePrincipal = Depends(require_support_service),
+) -> BusinessContext:
+    if READ_CONTEXT_SCOPE not in principal.scopes:
+        raise HTTPException(status_code=403, detail={"code": "SERVICE_SCOPE_FORBIDDEN"})
+
+    try:
+        return await context_service.get_context(
+            origin_service=origin_service,
+            resource_type=resource_type,
+            resource_id=resource_id,
+            request_id=request.headers.get("X-Request-ID"),
+        )
+    except (ContextNotConfiguredError, ContextNotFoundError) as exc:
+        raise HTTPException(status_code=404, detail={"code": str(exc)}) from exc
+    except ContextProviderUnavailableError as exc:
+        raise HTTPException(status_code=503, detail={"code": str(exc)}) from exc

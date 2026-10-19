@@ -11,5 +11,8 @@ Les permissions sont contrôlées côté API et non uniquement dans le Backoffic
 | `diddi-support:attachments-read` | Consulter les preuves autorisées |
 | `diddi-support:audit-read` | Lire l'historique d'audit |
 
-Une permission de lecture ne permet pas une décision métier ou financière.
+La consultation d'un contexte métier via DiddiSupport requiert également la
+permission de service `diddi-support:cases:read`. Le module propriétaire
+applique sa propre permission `owner:support-context:read`.
 
+Une permission de lecture ne permet pas une décision métier ou financière.
