@@ -158,6 +158,21 @@ class InMemorySupportCaseRepository:
     def get(self, case_id: UUID) -> SupportCase | None:
         return self._cases.get(case_id)
 
+    def list(
+        self,
+        *,
+        status: CaseStatus | None = None,
+        priority: CasePriority | None = None,
+        limit: int = 50,
+    ) -> list[SupportCase]:
+        cases = [
+            case
+            for case in self._cases.values()
+            if (status is None or case.status == status)
+            and (priority is None or case.priority == priority)
+        ]
+        return sorted(cases, key=lambda case: case.created_at)[:limit]
+
 
 class SupportCaseService:
     def __init__(self, repository: SupportCaseRepository) -> None:
@@ -231,6 +246,74 @@ class SupportCaseService:
                 )
             )
         return result, created
+
+    def assign_case(
+        self,
+        case_id: UUID,
+        agent_id: UUID,
+        *,
+        actor_id: str,
+        request_id: str | None,
+    ) -> SupportCase | None:
+        case = self.repository.get(case_id)
+        if case is None:
+            return None
+        case.assign(agent_id)
+        self.audit_events.append(
+            AuditEvent(
+                action="support.case.assigned",
+                target_type="support_case",
+                target_id=str(case.id),
+                outcome="succeeded",
+                actor_id=None,
+                request_id=request_id,
+                metadata={"agent_id": str(agent_id), "actor_id": actor_id},
+            )
+        )
+        self.outbox_events.append(
+            OutboxEvent(
+                event_type="support.case.assigned",
+                aggregate_type="support_case",
+                aggregate_id=str(case.id),
+                correlation_id=request_id,
+                payload={"agent_id": str(agent_id)},
+            )
+        )
+        return case
+
+    def transition_case(
+        self,
+        case_id: UUID,
+        new_status: CaseStatus,
+        *,
+        actor_id: str,
+        request_id: str | None,
+    ) -> SupportCase | None:
+        case = self.repository.get(case_id)
+        if case is None:
+            return None
+        case.transition_to(new_status)
+        self.audit_events.append(
+            AuditEvent(
+                action="support.case.status_changed",
+                target_type="support_case",
+                target_id=str(case.id),
+                outcome="succeeded",
+                actor_id=None,
+                request_id=request_id,
+                metadata={"status": new_status.value, "actor_id": actor_id},
+            )
+        )
+        self.outbox_events.append(
+            OutboxEvent(
+                event_type="support.case.updated",
+                aggregate_type="support_case",
+                aggregate_id=str(case.id),
+                correlation_id=request_id,
+                payload={"status": new_status.value},
+            )
+        )
+        return case
 
 
 def _fingerprint(payload: dict[str, Any]) -> str:

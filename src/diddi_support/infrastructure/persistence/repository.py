@@ -2,13 +2,19 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from typing import Any
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from diddi_support.domain.cases import CasePriority, DomainConflictError, SupportCase, _fingerprint
+from diddi_support.domain.cases import (
+    CasePriority,
+    CaseStatus,
+    DomainConflictError,
+    SupportCase,
+    _fingerprint,
+)
 from diddi_support.infrastructure.persistence.models import (
     SupportAuditEventModel,
     SupportCaseModel,
@@ -24,6 +30,70 @@ class PostgresSupportCaseRepository:
     async def get(self, case_id: UUID) -> SupportCase | None:
         model = await self.session.get(SupportCaseModel, case_id)
         return _to_domain(model) if model is not None else None
+
+    async def list(
+        self,
+        *,
+        status: CaseStatus | None = None,
+        priority: CasePriority | None = None,
+        limit: int = 50,
+    ) -> list[SupportCase]:
+        statement = select(SupportCaseModel).order_by(SupportCaseModel.created_at).limit(limit)
+        if status is not None:
+            statement = statement.where(SupportCaseModel.status == status.value)
+        if priority is not None:
+            statement = statement.where(SupportCaseModel.priority == priority.value)
+        result = await self.session.execute(statement)
+        return [_to_domain(model) for model in result.scalars().all()]
+
+    async def save_update(
+        self,
+        case: SupportCase,
+        *,
+        action: str,
+        actor_id: str,
+        request_id: str | None,
+        metadata: dict[str, Any],
+    ) -> SupportCase:
+        model = await self.session.get(SupportCaseModel, case.id)
+        if model is None:
+            return case
+        model.assigned_agent_id = case.assigned_agent_id
+        model.priority = case.priority.value
+        model.status = case.status.value
+        model.updated_at = case.updated_at
+        model.resolved_at = case.resolved_at
+        self.session.add(
+            SupportAuditEventModel(
+                id=uuid4(),
+                action=action,
+                target_type="support_case",
+                target_id=str(case.id),
+                outcome="succeeded",
+                actor_id=None,
+                request_id=request_id,
+                metadata_json={**metadata, "actor_id": actor_id},
+                occurred_at=datetime.now(UTC),
+            )
+        )
+        self.session.add(
+            SupportOutboxEventModel(
+                id=uuid4(),
+                event_type=action,
+                aggregate_type="support_case",
+                aggregate_id=str(case.id),
+                payload={
+                    "status": case.status.value,
+                    "assigned_agent_id": str(case.assigned_agent_id)
+                    if case.assigned_agent_id
+                    else None,
+                },
+                correlation_id=request_id,
+                created_at=datetime.now(UTC),
+            )
+        )
+        await self.session.commit()
+        return case
 
     async def create_or_get(
         self,

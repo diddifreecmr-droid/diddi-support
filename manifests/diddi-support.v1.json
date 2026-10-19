@@ -136,6 +136,27 @@
         "operation": "read_case_with_business_context",
         "auth": "user_jwt",
         "required_permission": "diddi-support:read"
+      },
+      {
+        "method": "GET",
+        "path": "/support/v1/backoffice/cases",
+        "operation": "list_support_cases",
+        "auth": "user_jwt",
+        "required_permission": "diddi-support:read"
+      },
+      {
+        "method": "POST",
+        "path": "/support/v1/backoffice/cases/{case_id}/assign",
+        "operation": "assign_support_case",
+        "auth": "user_jwt",
+        "required_permission": "diddi-support:assign"
+      },
+      {
+        "method": "POST",
+        "path": "/support/v1/backoffice/cases/{case_id}/transition",
+        "operation": "transition_support_case",
+        "auth": "user_jwt",
+        "required_permission": "diddi-support:write"
       }
     ],
     "context_routes_expected_from_owner": [

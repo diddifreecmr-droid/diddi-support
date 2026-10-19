@@ -19,4 +19,7 @@ Pour le Backoffice, l'agent doit présenter un JWT utilisateur actif destiné à
 `BACKOFFICE_AUDIENCE` et posséder `diddi-support:read`. Les scopes de service
 et les permissions d'agent ne sont pas interchangeables.
 
+Les actions d'écriture sont séparées : `diddi-support:assign` pour affecter un
+dossier et `diddi-support:write` pour changer son statut.
+
 Une permission de lecture ne permet pas une décision métier ou financière.
