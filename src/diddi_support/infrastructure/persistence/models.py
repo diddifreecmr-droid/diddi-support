@@ -32,6 +32,7 @@ class SupportCaseModel(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    aggregate_version: Mapped[int] = mapped_column(Integer, default=1)
 
 
 class SupportCaseOperationModel(Base):
@@ -83,6 +84,11 @@ class SupportOutboxEventModel(Base):
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     attempts: Mapped[int] = mapped_column(Integer, default=0)
     next_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    aggregate_version: Mapped[int] = mapped_column(Integer, default=1)
+    lease_owner: Mapped[str | None] = mapped_column(String(120))
+    lease_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_error: Mapped[str | None] = mapped_column(String(500))
+    quarantined_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class SupportMessageModel(Base):

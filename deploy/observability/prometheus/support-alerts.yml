@@ -1,0 +1,27 @@
+groups:
+  - name: diddisupport-outbox
+    rules:
+      - alert: DiddiSupportOutboxBacklog
+        expr: diddisupport_outbox_pending > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "DiddiSupport outbox backlog élevé"
+          description: "Plus de 100 événements Support attendent leur publication depuis 5 minutes."
+      - alert: DiddiSupportOutboxOldestEventTooOld
+        expr: diddisupport_outbox_oldest_age_seconds > 300
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Événement DiddiSupport trop ancien"
+          description: "Le plus ancien événement outbox attend depuis plus de 5 minutes."
+      - alert: DiddiSupportOutboxQuarantine
+        expr: increase(diddisupport_outbox_quarantined_total[10m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Événement DiddiSupport en quarantaine"
+          description: "Un événement doit être inspecté et rejoué explicitement."

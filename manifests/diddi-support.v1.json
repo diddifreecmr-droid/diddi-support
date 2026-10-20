@@ -314,17 +314,18 @@
     "delivery": "at_least_once",
     "deduplication_key": "event_id",
     "events": [
-      "support.case.created",
-      "support.case.updated",
-      "support.case.assigned",
-      "support.case.message.created",
-      "support.case.resolved",
-      "support.sos.created",
-      "support.sos.acknowledged",
-      "support.sos.escalated",
-      "support.action.requested",
-      "support.action.completed",
-      "support.action.failed"
+      "support.case.created.v1",
+      "support.case.updated.v1",
+      "support.case.assigned.v1",
+      "support.case.message.created.v1",
+      "support.case.resolved.v1",
+      "support.sos.created.v1",
+      "support.sos.acknowledged.v1",
+      "support.sos.escalated.v1",
+      "support.sos.notification.requested.v1",
+      "support.action.requested.v1",
+      "support.action.completed.v1",
+      "support.action.failed.v1"
     ]
   },
   "attachments": {
@@ -340,6 +341,9 @@
   },
   "reliability": {
     "transactional_outbox": true,
+    "event_stream": "diddisupport.events",
+    "event_envelope": "support.event.v1",
+    "deduplicate_by": "event_id",
     "inbox_deduplication": true,
     "retry_after_timeout": "recover_original_operation",
     "websocket_is_source_of_truth": false,

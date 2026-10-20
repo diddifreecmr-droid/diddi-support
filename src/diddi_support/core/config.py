@@ -19,6 +19,15 @@ class Settings(BaseSettings):
     backoffice_audience: str = "diddi-comms-backoffice"
     database_url: str = ""
     redis_url: str = ""
+    outbox_stream_name: str = "diddisupport.events"
+    outbox_stream_maxlen: int = Field(default=100_000, ge=1_000, le=10_000_000)
+    outbox_batch_size: int = Field(default=50, ge=1, le=500)
+    outbox_poll_interval_seconds: float = Field(default=1.0, gt=0, le=60)
+    outbox_lease_seconds: int = Field(default=60, ge=5, le=900)
+    outbox_max_attempts: int = Field(default=12, ge=1, le=100)
+    outbox_backoff_base_seconds: float = Field(default=1.0, gt=0, le=300)
+    outbox_backoff_max_seconds: int = Field(default=300, ge=1, le=86_400)
+    outbox_metrics_port: int = Field(default=9105, ge=1, le=65535)
     context_connectors_json: str = ""
     context_request_timeout_seconds: float = Field(default=3.0, gt=0, le=30)
     context_auth_token: str = ""

@@ -6,6 +6,14 @@ services:
     environment:
       DATABASE_URL: postgresql+asyncpg://diddi_support:diddi_support@postgres:5432/diddi_support
       REDIS_URL: redis://redis:6379/0
+      OUTBOX_STREAM_NAME: ${OUTBOX_STREAM_NAME:-diddisupport.events}
+      OUTBOX_STREAM_MAXLEN: ${OUTBOX_STREAM_MAXLEN:-100000}
+      OUTBOX_BATCH_SIZE: ${OUTBOX_BATCH_SIZE:-50}
+      OUTBOX_POLL_INTERVAL_SECONDS: ${OUTBOX_POLL_INTERVAL_SECONDS:-1}
+      OUTBOX_LEASE_SECONDS: ${OUTBOX_LEASE_SECONDS:-60}
+      OUTBOX_MAX_ATTEMPTS: ${OUTBOX_MAX_ATTEMPTS:-12}
+      OUTBOX_BACKOFF_BASE_SECONDS: ${OUTBOX_BACKOFF_BASE_SECONDS:-1}
+      OUTBOX_BACKOFF_MAX_SECONDS: ${OUTBOX_BACKOFF_MAX_SECONDS:-300}
       REQUIRE_DEPENDENCIES: "true"
       IDENTITY_JWKS_URL: ${IDENTITY_JWKS_URL:-}
       IDENTITY_ISSUER: ${IDENTITY_ISSUER:-diddifree-id}
@@ -35,6 +43,30 @@ services:
       ATTACHMENT_MAX_BYTES: ${ATTACHMENT_MAX_BYTES:-10485760}
       SOS_MAX_NOTIFICATION_ATTEMPTS: ${SOS_MAX_NOTIFICATION_ATTEMPTS:-3}
       SOS_ESCALATION_AFTER_SECONDS: ${SOS_ESCALATION_AFTER_SECONDS:-60}
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      - postgres
+      - redis
+
+  support-outbox-worker:
+    build: .
+    command: ["python", "-m", "diddi_support.ops.outbox_worker"]
+    ports:
+      - "9105:9105"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://diddi_support:diddi_support@postgres:5432/diddi_support
+      REDIS_URL: redis://redis:6379/0
+      OUTBOX_STREAM_NAME: ${OUTBOX_STREAM_NAME:-diddisupport.events}
+      OUTBOX_STREAM_MAXLEN: ${OUTBOX_STREAM_MAXLEN:-100000}
+      OUTBOX_BATCH_SIZE: ${OUTBOX_BATCH_SIZE:-50}
+      OUTBOX_POLL_INTERVAL_SECONDS: ${OUTBOX_POLL_INTERVAL_SECONDS:-1}
+      OUTBOX_LEASE_SECONDS: ${OUTBOX_LEASE_SECONDS:-60}
+      OUTBOX_MAX_ATTEMPTS: ${OUTBOX_MAX_ATTEMPTS:-12}
+      OUTBOX_BACKOFF_BASE_SECONDS: ${OUTBOX_BACKOFF_BASE_SECONDS:-1}
+      OUTBOX_BACKOFF_MAX_SECONDS: ${OUTBOX_BACKOFF_MAX_SECONDS:-300}
+      OUTBOX_METRICS_PORT: ${OUTBOX_METRICS_PORT:-9105}
     env_file:
       - path: .env
         required: false

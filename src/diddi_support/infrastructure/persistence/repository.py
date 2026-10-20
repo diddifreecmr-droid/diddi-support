@@ -13,9 +13,11 @@ from diddi_support.domain.cases import (
     CasePriority,
     CaseStatus,
     DomainConflictError,
+    MessageVisibility,
     SupportCase,
     _fingerprint,
 )
+from diddi_support.domain.events import SupportEventType, versioned_event_type
 from diddi_support.domain.messages import (
     AttachmentPurpose,
     MessageAuthorType,
@@ -72,7 +74,11 @@ class PostgresSupportCaseRepository:
         request_id: str | None,
         metadata: dict[str, Any],
     ) -> SupportCase:
-        model = await self.session.get(SupportCaseModel, case.id)
+        model = await self.session.scalar(
+            select(SupportCaseModel)
+            .where(SupportCaseModel.id == case.id)
+            .with_for_update()
+        )
         if model is None:
             return case
         model.assigned_agent_id = case.assigned_agent_id
@@ -80,6 +86,8 @@ class PostgresSupportCaseRepository:
         model.status = case.status.value
         model.updated_at = case.updated_at
         model.resolved_at = case.resolved_at
+        model.aggregate_version = max(model.aggregate_version + 1, case.aggregate_version)
+        case.aggregate_version = model.aggregate_version
         self.session.add(
             SupportAuditEventModel(
                 id=uuid4(),
@@ -96,17 +104,25 @@ class PostgresSupportCaseRepository:
         self.session.add(
             SupportOutboxEventModel(
                 id=uuid4(),
-                event_type=action,
+                event_type=(
+                    SupportEventType.CASE_RESOLVED.value
+                    if action == "support.case.status_changed"
+                    and case.status == CaseStatus.RESOLVED
+                    else versioned_event_type(action)
+                ),
                 aggregate_type="support_case",
                 aggregate_id=str(case.id),
                 payload={
+                    "case_id": str(case.id),
                     "status": case.status.value,
+                    "resolution_code": case.resolution_code,
                     "assigned_agent_id": str(case.assigned_agent_id)
                     if case.assigned_agent_id
                     else None,
                 },
                 correlation_id=request_id,
                 created_at=datetime.now(UTC),
+                aggregate_version=case.aggregate_version,
             )
         )
         await self.session.commit()
@@ -143,6 +159,7 @@ class PostgresSupportCaseRepository:
         actor_id: str | None = None,
         request_id: str | None = None,
     ) -> SupportMessage:
+        aggregate_version = await self._increment_case_version(message.case_id)
         self.session.add(
             SupportMessageModel(
                 id=message.id,
@@ -171,20 +188,23 @@ class PostgresSupportCaseRepository:
                 occurred_at=datetime.now(UTC),
             )
         )
-        self.session.add(
-            SupportOutboxEventModel(
-                id=uuid4(),
-                event_type="support.case.message.created",
-                aggregate_type="support_case",
-                aggregate_id=str(message.case_id),
-                payload={
-                    "message_id": str(message.id),
-                    "visibility": message.visibility,
-                },
-                correlation_id=request_id,
-                created_at=datetime.now(UTC),
+        if message.visibility == MessageVisibility.USER_VISIBLE.value:
+            self.session.add(
+                SupportOutboxEventModel(
+                    id=uuid4(),
+                    event_type=SupportEventType.CASE_MESSAGE_CREATED.value,
+                    aggregate_type="support_case",
+                    aggregate_id=str(message.case_id),
+                    payload={
+                        "case_id": str(message.case_id),
+                        "message_id": str(message.id),
+                        "visibility": message.visibility,
+                    },
+                    correlation_id=request_id,
+                    created_at=datetime.now(UTC),
+                    aggregate_version=aggregate_version,
+                )
             )
-        )
         await self.session.commit()
         return message
 
@@ -253,6 +273,7 @@ class PostgresSupportCaseRepository:
                     created_at=message.created_at,
                 )
             )
+            aggregate_version = await self._increment_case_version(message.case_id)
             self.session.add(
                 SupportAuditEventModel(
                     id=uuid4(),
@@ -270,21 +291,35 @@ class PostgresSupportCaseRepository:
                     occurred_at=datetime.now(UTC),
                 )
             )
-            self.session.add(
-                SupportOutboxEventModel(
-                    id=uuid4(),
-                    event_type="support.case.message.created",
-                    aggregate_type="support_case",
-                    aggregate_id=str(message.case_id),
-                    payload={
-                        "message_id": str(message.id),
-                        "visibility": message.visibility,
-                    },
-                    correlation_id=request_id,
-                    created_at=datetime.now(UTC),
+            if message.visibility == MessageVisibility.USER_VISIBLE.value:
+                self.session.add(
+                    SupportOutboxEventModel(
+                        id=uuid4(),
+                        event_type=SupportEventType.CASE_MESSAGE_CREATED.value,
+                        aggregate_type="support_case",
+                        aggregate_id=str(message.case_id),
+                        payload={
+                            "case_id": str(message.case_id),
+                            "message_id": str(message.id),
+                            "visibility": message.visibility,
+                        },
+                        correlation_id=request_id,
+                        created_at=datetime.now(UTC),
+                        aggregate_version=aggregate_version,
+                    )
                 )
-            )
         return message, True
+
+    async def _increment_case_version(self, case_id: UUID) -> int:
+        case = await self.session.scalar(
+            select(SupportCaseModel)
+            .where(SupportCaseModel.id == case_id)
+            .with_for_update()
+        )
+        if case is None:
+            raise RuntimeError("support message points to missing case")
+        case.aggregate_version += 1
+        return case.aggregate_version
 
     async def add_attachment(
         self,
@@ -642,10 +677,11 @@ class PostgresSupportCaseRepository:
             self.session.add(
                 SupportOutboxEventModel(
                     id=case.id,
-                    event_type="support.case.created",
+                    event_type=SupportEventType.CASE_CREATED.value,
                     aggregate_type="support_case",
                     aggregate_id=str(case.id),
                     payload={
+                        "case_id": str(case.id),
                         "origin_service": case.origin_service,
                         "resource_type": case.resource_type,
                         "resource_id": str(case.resource_id),
@@ -653,6 +689,7 @@ class PostgresSupportCaseRepository:
                     },
                     correlation_id=request_id,
                     created_at=datetime.now(UTC),
+                    aggregate_version=case.aggregate_version,
                 )
             )
         return case, True
@@ -675,6 +712,7 @@ def _case_model(case: SupportCase) -> SupportCaseModel:
         created_at=case.created_at,
         updated_at=case.updated_at,
         resolved_at=case.resolved_at,
+        aggregate_version=case.aggregate_version,
     )
 
 
@@ -695,6 +733,7 @@ def _to_domain(model: SupportCaseModel) -> SupportCase:
         created_at=model.created_at,
         updated_at=model.updated_at,
         resolved_at=model.resolved_at,
+        aggregate_version=model.aggregate_version,
     )
 
 

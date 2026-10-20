@@ -74,6 +74,7 @@ class SupportCase:
     created_at: datetime = field(default_factory=utc_now)
     updated_at: datetime = field(default_factory=utc_now)
     resolved_at: datetime | None = None
+    aggregate_version: int = 1
 
     def transition_to(self, status: CaseStatus, *, now: datetime | None = None) -> None:
         if status == self.status:
@@ -87,14 +88,17 @@ class SupportCase:
             self.resolved_at = current_time
         elif self.resolved_at is not None and status == CaseStatus.IN_PROGRESS:
             self.resolved_at = None
+        self.aggregate_version += 1
 
     def assign(self, agent_id: UUID, *, now: datetime | None = None) -> None:
         self.assigned_agent_id = agent_id
         self.updated_at = now or utc_now()
+        self.aggregate_version += 1
 
     def change_priority(self, priority: CasePriority, *, now: datetime | None = None) -> None:
         self.priority = priority
         self.updated_at = now or utc_now()
+        self.aggregate_version += 1
 
 
 @dataclass(frozen=True)

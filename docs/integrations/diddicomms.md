@@ -76,9 +76,13 @@ Cette route renvoie uniquement les messages `user_visible` (messages utilisateur
 et réponses agent). Les notes `internal_note` ne sont jamais exposées à
 DiddiComms.
 
-DiddiComms recevra les réponses agent `user_visible` via l'API de lecture et,
-à terme, via l'événement `support.case.message.created`. Les notes
+DiddiComms recevra les réponses agent `user_visible` via l'API de lecture et
+via le stream Redis `diddisupport.events`, avec l'événement
+`support.case.message.created.v1`. Les notes
 `internal_note` resteront invisibles à l'utilisateur.
+
+Le contrat complet de l'enveloppe, de l'idempotence et du rejeu est décrit
+dans [`docs/realtime/outbox-events.md`](../realtime/outbox-events.md).
 
 ## Erreurs contractuelles
 

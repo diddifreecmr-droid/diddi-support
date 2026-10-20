@@ -57,6 +57,18 @@ documentation, validation Docker et redeploiement.
 - `DIDDISUPPORT_DIDDISEND_SERVICE_AUDIENCE` et
   `DIDDISUPPORT_DIDDISEND_SERVICE_SCOPE` : audience et scope demandés au token.
 - `BACKOFFICE_AUDIENCE` : audience JWT attendue pour les agents du Backoffice.
+
+## Dispatcher outbox
+
+- `OUTBOX_STREAM_NAME` : stream Redis de publication, par défaut
+  `diddisupport.events`.
+- `OUTBOX_STREAM_MAXLEN` : rétention maximale approximative du stream.
+- `OUTBOX_BATCH_SIZE` : nombre maximal d'événements réclamés par cycle.
+- `OUTBOX_LEASE_SECONDS` : durée du bail anti-concurrence d'un événement.
+- `OUTBOX_MAX_ATTEMPTS` : nombre maximal de tentatives avant quarantaine.
+- `OUTBOX_BACKOFF_BASE_SECONDS` et `OUTBOX_BACKOFF_MAX_SECONDS` : bornes du
+  backoff exponentiel.
+- `OUTBOX_METRICS_PORT` : port Prometheus du worker, 9105 par défaut.
 ## Sécurité et pilote
 
 Les variables `IDENTITY_JWKS_URL`, `IDENTITY_ISSUER`, `SERVICE_AUDIENCE` et
