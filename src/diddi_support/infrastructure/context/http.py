@@ -174,4 +174,18 @@ def providers_from_settings() -> dict[str, HttpContextProvider]:
             client_secret=settings.diddisupport_diddigo_service_client_secret,
             audience=settings.diddisupport_diddigo_service_audience,
         )
+    if (
+        settings.diddisupport_diddisend_base_url
+        and settings.diddifreeid_service_token_url
+        and settings.diddisupport_diddisend_service_client_id
+        and settings.diddisupport_diddisend_service_client_secret
+    ):
+        providers["diddisend"] = HttpContextProvider(
+            base_url=settings.diddisupport_diddisend_base_url,
+            scope=settings.diddisupport_diddisend_service_scope,
+            token_url=settings.diddifreeid_service_token_url,
+            client_id=settings.diddisupport_diddisend_service_client_id,
+            client_secret=settings.diddisupport_diddisend_service_client_secret,
+            audience=settings.diddisupport_diddisend_service_audience,
+        )
     return providers

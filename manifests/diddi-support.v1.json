@@ -78,7 +78,8 @@
         "origin_service": "diddisend",
         "resource_type": "delivery",
         "context_scope": "diddisend:support-context:read",
-        "status": "implemented"
+        "status": "implemented",
+        "endpoint": "/internal/v1/support/delivery/{resource_id}/context"
       }
     ]
   },

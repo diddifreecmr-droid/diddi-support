@@ -40,6 +40,12 @@ documentation, validation Docker et redeploiement.
   pour interroger DiddiGo. Le secret est injecté uniquement par Portainer.
 - `DIDDISUPPORT_DIDDIGO_SERVICE_AUDIENCE` et
   `DIDDISUPPORT_DIDDIGO_SERVICE_SCOPE` : audience et scope demandés au token.
+- `DIDDISUPPORT_DIDDISEND_BASE_URL` : URL réseau de DiddiSend.
+- `DIDDISUPPORT_DIDDISEND_SERVICE_CLIENT_ID` et
+  `DIDDISUPPORT_DIDDISEND_SERVICE_CLIENT_SECRET` : identité de DiddiSupport
+  pour interroger DiddiSend. Le secret est injecté uniquement par Portainer.
+- `DIDDISUPPORT_DIDDISEND_SERVICE_AUDIENCE` et
+  `DIDDISUPPORT_DIDDISEND_SERVICE_SCOPE` : audience et scope demandés au token.
 - `BACKOFFICE_AUDIENCE` : audience JWT attendue pour les agents du Backoffice.
 ## Sécurité et pilote
 
