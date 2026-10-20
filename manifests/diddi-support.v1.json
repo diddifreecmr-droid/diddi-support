@@ -113,7 +113,9 @@
         "operation": "create_case_from_owner_module",
         "auth": "service_jwt",
         "required_scope": "diddi-support:cases:create",
-        "idempotency": "required"
+        "idempotency": "required",
+        "allowed_callers": ["diddicomms", "diddigo", "diddifood", "diddisend"],
+        "delegated_origin_supported": true
       },
       {
         "method": "GET",
@@ -122,6 +124,25 @@
         "auth": "service_jwt",
         "required_scope": "diddi-support:cases:read",
         "allowed_callers": ["diddicomms"]
+      },
+      {
+        "method": "POST",
+        "path": "/support/v1/internal/cases/{case_id}/messages",
+        "operation": "create_user_message_from_diddicomms",
+        "auth": "service_jwt",
+        "required_scope": "diddi-support:messages:write",
+        "allowed_callers": ["diddicomms"],
+        "idempotency": "required",
+        "status": "planned"
+      },
+      {
+        "method": "GET",
+        "path": "/support/v1/internal/cases/{case_id}/messages",
+        "operation": "read_user_visible_messages_for_diddicomms",
+        "auth": "service_jwt",
+        "required_scope": "diddi-support:cases:read",
+        "allowed_callers": ["diddicomms"],
+        "status": "planned"
       },
       {
         "method": "GET",

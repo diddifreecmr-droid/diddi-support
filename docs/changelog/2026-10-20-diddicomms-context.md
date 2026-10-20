@@ -7,3 +7,5 @@
 - Le `client_id` DiddiComms peut être verrouillé par environnement avec
   `DIDDICOMMS_SERVICE_CLIENT_ID`.
 - L’URL staging DiddiSend est préparée dans la configuration du connecteur.
+- Le contrat DiddiComms de création de dossier et de conversation est figé ;
+  les routes de messages internes restent planifiées pour le sprint suivant.
