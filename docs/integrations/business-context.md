@@ -80,6 +80,11 @@ GET /support/v1/internal/context/{origin_service}/{resource_type}/{resource_id}
 
 Permission requise : `diddi-support:cases:read`.
 
+Le contrat autorise explicitement DiddiComms comme consommateur : le JWT doit
+porter le sujet `service:diddicomms`, et son `client_id` doit correspondre à
+`DIDDICOMMS_SERVICE_CLIENT_ID` lorsqu'une valeur est configurée. Tout autre
+service reçoit `403 CONTEXT_CALLER_FORBIDDEN`.
+
 Pour charger directement le contexte lié à un dossier existant :
 
 ```text

@@ -72,6 +72,29 @@ READ_CONTEXT_SCOPE = "diddi-support:cases:read"
 BACKOFFICE_READ_PERMISSION = "diddi-support:read"
 
 
+def _allowed_context_services() -> frozenset[str]:
+    return frozenset(
+        service.strip()
+        for service in settings.context_reader_allowed_services.split(",")
+        if service.strip()
+    )
+
+
+def require_context_reader(
+    principal: ServicePrincipal = Depends(require_support_service),
+) -> ServicePrincipal:
+    """Allow only explicitly registered internal context consumers."""
+    if principal.subject.removeprefix("service:") not in _allowed_context_services():
+        raise HTTPException(status_code=403, detail={"code": "CONTEXT_CALLER_FORBIDDEN"})
+    if (
+        principal.subject == "service:diddicomms"
+        and settings.diddicomms_service_client_id
+        and principal.client_id != settings.diddicomms_service_client_id
+    ):
+        raise HTTPException(status_code=403, detail={"code": "CONTEXT_CLIENT_ID_FORBIDDEN"})
+    return principal
+
+
 class CreateCaseRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -312,7 +335,7 @@ async def get_business_context(
     resource_type: str,
     resource_id: UUID,
     request: Request,
-    principal: ServicePrincipal = Depends(require_support_service),
+    principal: ServicePrincipal = Depends(require_context_reader),
     session: AsyncSession | None = Depends(get_session_optional),
 ) -> BusinessContext:
     if READ_CONTEXT_SCOPE not in principal.scopes:
@@ -415,7 +438,7 @@ async def record_action_result(
 async def get_case_context(
     case_id: UUID,
     request: Request,
-    principal: ServicePrincipal = Depends(require_support_service),
+    principal: ServicePrincipal = Depends(require_context_reader),
     session: AsyncSession | None = Depends(get_session_optional),
 ) -> CaseContextResponse:
     if READ_CONTEXT_SCOPE not in principal.scopes:

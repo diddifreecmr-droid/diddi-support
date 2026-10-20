@@ -120,14 +120,16 @@
         "path": "/support/v1/internal/context/{origin_service}/{resource_type}/{resource_id}",
         "operation": "read_business_context",
         "auth": "service_jwt",
-        "required_scope": "diddi-support:cases:read"
+        "required_scope": "diddi-support:cases:read",
+        "allowed_callers": ["diddicomms"]
       },
       {
         "method": "GET",
         "path": "/support/v1/internal/cases/{case_id}/context",
         "operation": "read_case_with_business_context",
         "auth": "service_jwt",
-        "required_scope": "diddi-support:cases:read"
+        "required_scope": "diddi-support:cases:read",
+        "allowed_callers": ["diddicomms"]
       },
       {
         "method": "POST",

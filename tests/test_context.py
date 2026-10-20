@@ -190,6 +190,22 @@ def test_internal_context_endpoint_requires_read_scope() -> None:
         app.dependency_overrides.pop(require_support_service, None)
 
 
+def test_internal_context_endpoint_rejects_non_diddicomms_caller() -> None:
+    app.dependency_overrides[require_support_service] = lambda: ServicePrincipal(
+        subject="service:diddigo",
+        client_id="diddigo-staging-support",
+        scopes=frozenset({"diddi-support:cases:read"}),
+    )
+    try:
+        response = TestClient(app).get(
+            f"/support/v1/internal/context/diddigo/ride/{RIDE_ID}",
+        )
+        assert response.status_code == 403
+        assert response.json()["detail"]["code"] == "CONTEXT_CALLER_FORBIDDEN"
+    finally:
+        app.dependency_overrides.pop(require_support_service, None)
+
+
 def test_case_context_endpoint_resolves_case_reference() -> None:
     case, _ = internal_router.case_service.open_case(
         origin_service="diddigo",

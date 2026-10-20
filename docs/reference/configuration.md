@@ -32,6 +32,11 @@ documentation, validation Docker et redeploiement.
 - `CONTEXT_REQUEST_TIMEOUT_SECONDS` : timeout de lecture des contextes métier.
 - `CONTEXT_AUTH_TOKEN` et `CONTEXT_CLIENT_ID` : identité sortante statique de
   secours vers les modules propriétaires. Le token reste un secret.
+- `CONTEXT_READER_ALLOWED_SERVICES` : liste des services autorisés à lire un
+  contexte via DiddiSupport. Par défaut, seul `diddicomms` est accepté.
+- `DIDDICOMMS_SERVICE_CLIENT_ID` : client ID DiddiFreeID attendu pour les
+  appels de contexte provenant de DiddiComms. Une valeur doit être injectée
+  en staging et en production.
 - `DIDDIFREEID_SERVICE_TOKEN_URL` : endpoint DiddiFreeID pour le grant
   `client_credentials`.
 - `DIDDISUPPORT_DIDDIGO_BASE_URL` : URL réseau de DiddiGo.
@@ -40,7 +45,9 @@ documentation, validation Docker et redeploiement.
   pour interroger DiddiGo. Le secret est injecté uniquement par Portainer.
 - `DIDDISUPPORT_DIDDIGO_SERVICE_AUDIENCE` et
   `DIDDISUPPORT_DIDDIGO_SERVICE_SCOPE` : audience et scope demandés au token.
-- `DIDDISUPPORT_DIDDISEND_BASE_URL` : URL réseau de DiddiSend.
+- `DIDDISUPPORT_DIDDISEND_BASE_URL` : URL réseau de DiddiSend
+  (`http://diddisend-api-staging.diddifree.com` en staging si le proxy est en
+  HTTP).
 - `DIDDISUPPORT_DIDDISEND_SERVICE_CLIENT_ID` et
   `DIDDISUPPORT_DIDDISEND_SERVICE_CLIENT_SECRET` : identité de DiddiSupport
   pour interroger DiddiSend. Le secret est injecté uniquement par Portainer.

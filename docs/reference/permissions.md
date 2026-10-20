@@ -15,6 +15,10 @@ La consultation d'un contexte métier via DiddiSupport requiert également la
 permission de service `diddi-support:cases:read`. Le module propriétaire
 applique sa propre permission `owner:support-context:read`.
 
+Le consommateur autorisé du contexte est explicitement `diddicomms` avec le
+sujet `service:diddicomms`. Son `client_id` doit correspondre à
+`DIDDICOMMS_SERVICE_CLIENT_ID` lorsqu'il est configuré.
+
 Pour le Backoffice, l'agent doit présenter un JWT utilisateur actif destiné à
 `BACKOFFICE_AUDIENCE` et posséder `diddi-support:read`. Les scopes de service
 et les permissions d'agent ne sont pas interchangeables.
