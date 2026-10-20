@@ -45,6 +45,8 @@ Le corps contient la référence métier et l'utilisateur concerné :
 `origin_service` indique le propriétaire de la ressource, pas l'appelant.
 DiddiSupport audite séparément `service:diddicomms` comme créateur technique
 et `reporter_user_id` comme utilisateur à l'origine du signalement.
+Les origines déléguées autorisées sont `diddigo`, `diddifood`, `diddisend` et
+`diddipay`.
 
 Deux appels avec la même `Idempotency-Key` et le même contenu retournent le
 même dossier. Une réutilisation avec un contenu différent retourne

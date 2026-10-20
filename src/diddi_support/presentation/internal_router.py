@@ -80,6 +80,14 @@ def _allowed_context_services() -> frozenset[str]:
     )
 
 
+def _delegated_origin_allowed(origin_service: str) -> bool:
+    return origin_service in {
+        service.strip()
+        for service in settings.case_delegated_origin_services.split(",")
+        if service.strip()
+    }
+
+
 def require_context_reader(
     principal: ServicePrincipal = Depends(require_support_service),
 ) -> ServicePrincipal:
@@ -277,7 +285,15 @@ async def create_case(
 ) -> CaseResponse:
     if CREATE_CASE_SCOPE not in principal.scopes:
         raise HTTPException(status_code=403, detail={"code": "SERVICE_SCOPE_FORBIDDEN"})
-    if principal.subject != f"service:{payload.origin_service}":
+    if principal.subject == "service:diddicomms":
+        if (
+            settings.diddicomms_service_client_id
+            and principal.client_id != settings.diddicomms_service_client_id
+        ):
+            raise HTTPException(status_code=403, detail={"code": "CONTEXT_CLIENT_ID_FORBIDDEN"})
+        if not _delegated_origin_allowed(payload.origin_service):
+            raise HTTPException(status_code=403, detail={"code": "SERVICE_ORIGIN_FORBIDDEN"})
+    elif principal.subject != f"service:{payload.origin_service}":
         raise HTTPException(status_code=403, detail={"code": "SERVICE_ORIGIN_FORBIDDEN"})
     if not idempotency_key:
         raise HTTPException(status_code=400, detail={"code": "IDEMPOTENCY_KEY_REQUIRED"})

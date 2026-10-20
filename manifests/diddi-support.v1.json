@@ -80,6 +80,12 @@
         "context_scope": "diddisend:support-context:read",
         "status": "implemented",
         "endpoint": "/internal/v1/support/delivery/{resource_id}/context"
+      },
+      {
+        "origin_service": "diddipay",
+        "resource_type": "withdrawal",
+        "context_scope": "diddipay:support-context:read",
+        "status": "planned"
       }
     ]
   },

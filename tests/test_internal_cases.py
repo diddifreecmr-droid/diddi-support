@@ -87,3 +87,53 @@ def test_service_without_scope_is_rejected() -> None:
         assert response.json()["detail"]["code"] == "SERVICE_SCOPE_FORBIDDEN"
     finally:
         app.dependency_overrides.pop(require_support_service, None)
+
+
+def test_diddicomms_can_create_for_a_delegated_business_origin() -> None:
+    app.dependency_overrides[require_support_service] = lambda: ServicePrincipal(
+        subject="service:diddicomms",
+        client_id="diddicomms-support",
+        scopes=frozenset({"diddi-support:cases:create"}),
+    )
+    try:
+        response = TestClient(app).post(
+            "/support/v1/internal/cases",
+            json={
+                "origin_service": "diddisend",
+                "resource_type": "delivery",
+                "resource_id": RIDE_ID,
+                "reporter_user_id": REPORTER_ID,
+                "category": "delivery_issue",
+                "subject": "Delivery is late",
+            },
+            headers={"Idempotency-Key": "comms-delegated-1"},
+        )
+        assert response.status_code == 201
+        assert response.json()["origin_service"] == "diddisend"
+    finally:
+        app.dependency_overrides.pop(require_support_service, None)
+
+
+def test_diddicomms_cannot_create_for_an_unregistered_origin() -> None:
+    app.dependency_overrides[require_support_service] = lambda: ServicePrincipal(
+        subject="service:diddicomms",
+        client_id="diddicomms-support",
+        scopes=frozenset({"diddi-support:cases:create"}),
+    )
+    try:
+        response = TestClient(app).post(
+            "/support/v1/internal/cases",
+            json={
+                "origin_service": "unknown-module",
+                "resource_type": "resource",
+                "resource_id": RIDE_ID,
+                "reporter_user_id": REPORTER_ID,
+                "category": "other",
+                "subject": "Unknown origin",
+            },
+            headers={"Idempotency-Key": "comms-delegated-2"},
+        )
+        assert response.status_code == 403
+        assert response.json()["detail"]["code"] == "SERVICE_ORIGIN_FORBIDDEN"
+    finally:
+        app.dependency_overrides.pop(require_support_service, None)

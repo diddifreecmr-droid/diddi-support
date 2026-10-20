@@ -34,6 +34,9 @@ documentation, validation Docker et redeploiement.
   secours vers les modules propriétaires. Le token reste un secret.
 - `CONTEXT_READER_ALLOWED_SERVICES` : liste des services autorisés à lire un
   contexte via DiddiSupport. Par défaut, seul `diddicomms` est accepté.
+- `CASE_DELEGATED_ORIGIN_SERVICES` : propriétaires métier pour lesquels
+  DiddiComms peut ouvrir un dossier par délégation. Cette liste est validée au
+  démarrage et nécessite un redeploiement pour changer.
 - `DIDDICOMMS_SERVICE_CLIENT_ID` : client ID DiddiFreeID attendu pour les
   appels de contexte provenant de DiddiComms. Une valeur doit être injectée
   en staging et en production.

@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     context_auth_token: str = ""
     context_client_id: str = ""
     context_reader_allowed_services: str = "diddicomms"
+    case_delegated_origin_services: str = "diddigo,diddifood,diddisend,diddipay"
     diddicomms_service_client_id: str = ""
     diddifreeid_service_token_url: str = ""
     diddisupport_diddigo_base_url: str = ""

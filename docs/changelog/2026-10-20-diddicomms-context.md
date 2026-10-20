@@ -11,3 +11,5 @@
   les routes de messages internes restent planifiées pour le sprint suivant.
 - Les claims service DiddiFreeID sont maintenant vérifiés de manière cohérente
   (`token_type`, `role`, `status`, `sub` et `service`).
+- DiddiComms peut ouvrir un dossier par délégation pour une ressource métier
+  autorisée, sans usurper l'identité du module propriétaire.
