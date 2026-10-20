@@ -44,6 +44,18 @@ class SupportCaseOperationModel(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+class SupportMessageOperationModel(Base):
+    __tablename__ = "support_message_operations"
+    __table_args__ = (
+        UniqueConstraint("idempotency_key", name="support_message_operations_key_uq"),
+    )
+
+    idempotency_key: Mapped[str] = mapped_column(String(160), primary_key=True)
+    fingerprint: Mapped[str] = mapped_column(String(64))
+    message_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class SupportAuditEventModel(Base):
     __tablename__ = "support_audit_events"
 

@@ -35,6 +35,7 @@ from diddi_support.infrastructure.persistence.models import (
     SupportCaseModel,
     SupportCaseOperationModel,
     SupportMessageModel,
+    SupportMessageOperationModel,
     SupportOutboxEventModel,
 )
 
@@ -205,6 +206,85 @@ class PostgresSupportCaseRepository:
             )
             for model in result.scalars().all()
         ]
+
+    async def create_or_get_message(
+        self,
+        message: SupportMessage,
+        *,
+        request_payload: dict[str, Any],
+        idempotency_key: str,
+        actor_id: str | None = None,
+        request_id: str | None = None,
+    ) -> tuple[SupportMessage, bool]:
+        fingerprint = _fingerprint(request_payload)
+        if self.session.in_transaction():
+            await self.session.commit()
+        async with self.session.begin():
+            operation_insert = insert(SupportMessageOperationModel).values(
+                idempotency_key=idempotency_key,
+                fingerprint=fingerprint,
+                message_id=message.id,
+                created_at=datetime.now(UTC),
+            ).on_conflict_do_nothing(
+                index_elements=[SupportMessageOperationModel.idempotency_key]
+            )
+            result = await self.session.execute(operation_insert)
+            if result.rowcount == 0:
+                operation = await self.session.scalar(
+                    select(SupportMessageOperationModel).where(
+                        SupportMessageOperationModel.idempotency_key == idempotency_key
+                    )
+                )
+                if operation is None or operation.fingerprint != fingerprint:
+                    raise DomainConflictError("IDEMPOTENCY_CONFLICT")
+                existing = await self.session.get(SupportMessageModel, operation.message_id)
+                if existing is None:
+                    raise RuntimeError("support message operation points to missing message")
+                return _message_to_domain(existing), False
+
+            self.session.add(
+                SupportMessageModel(
+                    id=message.id,
+                    case_id=message.case_id,
+                    author_type=message.author_type.value,
+                    author_id=message.author_id,
+                    body=message.body,
+                    visibility=message.visibility,
+                    created_at=message.created_at,
+                )
+            )
+            self.session.add(
+                SupportAuditEventModel(
+                    id=uuid4(),
+                    action="support.message.created",
+                    target_type="support_case_message",
+                    target_id=str(message.id),
+                    outcome="succeeded",
+                    actor_id=None,
+                    request_id=request_id,
+                    metadata_json={
+                        "actor_id": actor_id,
+                        "case_id": str(message.case_id),
+                        "visibility": message.visibility,
+                    },
+                    occurred_at=datetime.now(UTC),
+                )
+            )
+            self.session.add(
+                SupportOutboxEventModel(
+                    id=uuid4(),
+                    event_type="support.case.message.created",
+                    aggregate_type="support_case",
+                    aggregate_id=str(message.case_id),
+                    payload={
+                        "message_id": str(message.id),
+                        "visibility": message.visibility,
+                    },
+                    correlation_id=request_id,
+                    created_at=datetime.now(UTC),
+                )
+            )
+        return message, True
 
     async def add_attachment(
         self,
@@ -627,6 +707,18 @@ def _attachment_to_domain(model: SupportAttachmentModel) -> SupportAttachment:
         purpose=AttachmentPurpose(model.purpose),
         mime_type=model.mime_type,
         size_bytes=model.size_bytes,
+        created_at=model.created_at,
+    )
+
+
+def _message_to_domain(model: SupportMessageModel) -> SupportMessage:
+    return SupportMessage(
+        id=model.id,
+        case_id=model.case_id,
+        author_type=MessageAuthorType(model.author_type),
+        author_id=model.author_id,
+        body=model.body,
+        visibility=model.visibility,
         created_at=model.created_at,
     )
 

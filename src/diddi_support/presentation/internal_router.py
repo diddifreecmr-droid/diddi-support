@@ -69,6 +69,7 @@ handoff_service = ConversationModeService()
 diddifiles_client = client_from_settings()
 CREATE_CASE_SCOPE = "diddi-support:cases:create"
 READ_CONTEXT_SCOPE = "diddi-support:cases:read"
+MESSAGE_WRITE_SCOPE = "diddi-support:messages:write"
 BACKOFFICE_READ_PERMISSION = "diddi-support:read"
 
 
@@ -97,6 +98,19 @@ def require_context_reader(
     if (
         principal.subject == "service:diddicomms"
         and settings.diddicomms_service_client_id
+        and principal.client_id != settings.diddicomms_service_client_id
+    ):
+        raise HTTPException(status_code=403, detail={"code": "CONTEXT_CLIENT_ID_FORBIDDEN"})
+    return principal
+
+
+def require_diddicomms(
+    principal: ServicePrincipal = Depends(require_support_service),
+) -> ServicePrincipal:
+    if principal.subject != "service:diddicomms":
+        raise HTTPException(status_code=403, detail={"code": "CONTEXT_CALLER_FORBIDDEN"})
+    if (
+        settings.diddicomms_service_client_id
         and principal.client_id != settings.diddicomms_service_client_id
     ):
         raise HTTPException(status_code=403, detail={"code": "CONTEXT_CLIENT_ID_FORBIDDEN"})
@@ -170,6 +184,13 @@ class CreateMessageRequest(BaseModel):
 
     body: str = Field(min_length=1, max_length=10_000)
     visibility: MessageVisibility
+
+
+class CreateUserMessageRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reporter_user_id: UUID
+    body: str = Field(min_length=1, max_length=10_000)
 
 
 class MessageResponse(BaseModel):
@@ -377,6 +398,86 @@ async def get_business_context(
         raise HTTPException(status_code=404, detail={"code": str(exc)}) from exc
     except ContextProviderUnavailableError as exc:
         raise HTTPException(status_code=503, detail={"code": str(exc)}) from exc
+
+
+@router.post(
+    "/cases/{case_id}/messages",
+    response_model=MessageResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_user_message(
+    case_id: UUID,
+    payload: CreateUserMessageRequest,
+    request: Request,
+    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key"),
+    principal: ServicePrincipal = Depends(require_diddicomms),
+    session: AsyncSession | None = Depends(get_session_optional),
+) -> MessageResponse:
+    if MESSAGE_WRITE_SCOPE not in principal.scopes:
+        raise HTTPException(status_code=403, detail={"code": "SERVICE_SCOPE_FORBIDDEN"})
+    if not idempotency_key:
+        raise HTTPException(status_code=400, detail={"code": "IDEMPOTENCY_KEY_REQUIRED"})
+    case = await _load_case(case_id, session)
+    if case is None:
+        raise HTTPException(status_code=404, detail={"code": "CASE_NOT_FOUND"})
+    if payload.reporter_user_id != case.reporter_user_id:
+        raise HTTPException(status_code=403, detail={"code": "MESSAGE_AUTHOR_FORBIDDEN"})
+
+    message = SupportMessage(
+        case_id=case_id,
+        author_type=MessageAuthorType.USER,
+        author_id=str(payload.reporter_user_id),
+        body=payload.body,
+        visibility=MessageVisibility.USER_VISIBLE.value,
+    )
+    request_payload = {
+        "case_id": str(case_id),
+        "reporter_user_id": str(payload.reporter_user_id),
+        "body": payload.body,
+        "visibility": MessageVisibility.USER_VISIBLE.value,
+    }
+    try:
+        if session is None:
+            message, _ = conversation_service.create_or_get_message(
+                message,
+                request_payload=request_payload,
+                idempotency_key=idempotency_key,
+            )
+        else:
+            message, _ = await PersistentSupportConversationService(session).create_or_get_message(
+                message,
+                request_payload=request_payload,
+                idempotency_key=idempotency_key,
+                actor_id=principal.subject,
+                request_id=request.headers.get("X-Request-ID"),
+            )
+    except DomainConflictError as exc:
+        raise HTTPException(status_code=409, detail={"code": str(exc)}) from exc
+    return _to_message_response(message)
+
+
+@router.get(
+    "/cases/{case_id}/messages",
+    response_model=list[MessageResponse],
+)
+async def list_user_messages(
+    case_id: UUID,
+    principal: ServicePrincipal = Depends(require_diddicomms),
+    session: AsyncSession | None = Depends(get_session_optional),
+) -> list[MessageResponse]:
+    if READ_CONTEXT_SCOPE not in principal.scopes:
+        raise HTTPException(status_code=403, detail={"code": "SERVICE_SCOPE_FORBIDDEN"})
+    if await _load_case(case_id, session) is None:
+        raise HTTPException(status_code=404, detail={"code": "CASE_NOT_FOUND"})
+    if session is None:
+        messages = conversation_service.list_messages(case_id)
+    else:
+        messages = await PersistentSupportConversationService(session).list_messages(case_id)
+    return [
+        _to_message_response(message)
+        for message in messages
+        if MessageVisibility(message.visibility) == MessageVisibility.USER_VISIBLE
+    ]
 
 
 @router.post("/sos", response_model=SosResponse, status_code=status.HTTP_201_CREATED)

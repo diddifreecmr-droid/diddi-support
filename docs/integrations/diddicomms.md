@@ -1,6 +1,6 @@
 # Contrat DiddiComms ↔ DiddiSupport
 
-Statut : `contract-frozen`, implémentation conversationnelle à venir.
+Statut : `contract-frozen`, routes internes de conversation implémentées.
 
 DiddiComms est le point d'entrée des utilisateurs et l'interface des agents.
 DiddiSupport reste propriétaire des dossiers, des messages, des statuts, de
@@ -14,6 +14,7 @@ Les appels service-to-service de DiddiComms utilisent :
 - sujet : `service:diddicomms` ;
 - scope de création : `diddi-support:cases:create` ;
 - scope de lecture : `diddi-support:cases:read` ;
+- scope d'écriture des messages utilisateur : `diddi-support:messages:write` ;
 - `X-Client-ID` correspondant à `DIDDICOMMS_SERVICE_CLIENT_ID` ;
 - `X-Request-ID` obligatoire pour la corrélation.
 
@@ -54,15 +55,26 @@ même dossier. Une réutilisation avec un contenu différent retourne
 
 ## Messages utilisateur
 
-La future route interne dédiée sera :
+La route interne dédiée est :
 
 ```http
 POST /support/v1/internal/cases/{case_id}/messages
 ```
 
-Elle permettra à DiddiComms de transmettre un message utilisateur à Support.
+Elle permet à DiddiComms de transmettre un message utilisateur à Support.
 Le message sera créé avec `author_type=user`, `author_id=reporter_user_id` et
-une visibilité `user_visible`. La clé d'idempotence sera obligatoire.
+une visibilité `user_visible`. La clé d'idempotence et le `reporter_user_id`
+sont obligatoires, et le reporter doit être celui du dossier.
+
+Pour relire la conversation destinée à l'utilisateur :
+
+```http
+GET /support/v1/internal/cases/{case_id}/messages
+```
+
+Cette route renvoie uniquement les messages `user_visible` (messages utilisateur
+et réponses agent). Les notes `internal_note` ne sont jamais exposées à
+DiddiComms.
 
 DiddiComms recevra les réponses agent `user_visible` via l'API de lecture et,
 à terme, via l'événement `support.case.message.created`. Les notes
@@ -76,6 +88,7 @@ DiddiComms recevra les réponses agent `user_visible` via l'API de lecture et,
 | 401 | `SERVICE_TOKEN_REQUIRED` ou `SERVICE_TOKEN_INVALID` | identité invalide |
 | 403 | `SERVICE_SCOPE_FORBIDDEN` | scope manquant |
 | 403 | `CONTEXT_CALLER_FORBIDDEN` | appelant non autorisé |
+| 403 | `MESSAGE_AUTHOR_FORBIDDEN` | l'utilisateur n'est pas le reporter du dossier |
 | 404 | `CASE_NOT_FOUND` | dossier inexistant |
 | 409 | `IDEMPOTENCY_CONFLICT` | clé réutilisée avec un autre contenu |
 | 503 | `SUPPORT_UNAVAILABLE` | Support temporairement indisponible |

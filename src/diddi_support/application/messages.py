@@ -13,6 +13,7 @@ class SupportConversationService:
     def __init__(self) -> None:
         self.messages: dict[UUID, list[SupportMessage]] = {}
         self.attachments: dict[UUID, list[SupportAttachment]] = {}
+        self.message_operations: dict[str, tuple[str, UUID]] = {}
 
     def add_message(self, message: SupportMessage) -> SupportMessage:
         self.messages.setdefault(message.case_id, []).append(message)
@@ -20,6 +21,31 @@ class SupportConversationService:
 
     def list_messages(self, case_id: UUID) -> Iterable[SupportMessage]:
         return tuple(self.messages.get(case_id, ()))
+
+    def create_or_get_message(
+        self,
+        message: SupportMessage,
+        *,
+        request_payload: dict[str, object],
+        idempotency_key: str,
+    ) -> tuple[SupportMessage, bool]:
+        from diddi_support.domain.cases import DomainConflictError, _fingerprint
+
+        fingerprint = _fingerprint(request_payload)
+        existing = self.message_operations.get(idempotency_key)
+        if existing is not None:
+            previous_fingerprint, message_id = existing
+            if previous_fingerprint != fingerprint:
+                raise DomainConflictError("IDEMPOTENCY_CONFLICT")
+            stored = next(
+                item
+                for messages in self.messages.values()
+                for item in messages
+                if item.id == message_id
+            )
+            return stored, False
+        self.message_operations[idempotency_key] = (fingerprint, message.id)
+        return self.add_message(message), True
 
     def add_attachment(self, attachment: SupportAttachment) -> SupportAttachment:
         self.attachments.setdefault(attachment.case_id, []).append(attachment)
@@ -59,6 +85,23 @@ class PersistentSupportConversationService:
 
     async def list_messages(self, case_id: UUID) -> list[SupportMessage]:
         return await self.repository.list_messages(case_id)
+
+    async def create_or_get_message(
+        self,
+        message: SupportMessage,
+        *,
+        request_payload: dict[str, object],
+        idempotency_key: str,
+        actor_id: str | None = None,
+        request_id: str | None = None,
+    ) -> tuple[SupportMessage, bool]:
+        return await self.repository.create_or_get_message(
+            message,
+            request_payload=request_payload,
+            idempotency_key=idempotency_key,
+            actor_id=actor_id,
+            request_id=request_id,
+        )
 
     async def add_attachment(
         self,

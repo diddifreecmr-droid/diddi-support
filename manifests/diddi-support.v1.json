@@ -139,7 +139,7 @@
         "required_scope": "diddi-support:messages:write",
         "allowed_callers": ["diddicomms"],
         "idempotency": "required",
-        "status": "planned"
+        "status": "implemented"
       },
       {
         "method": "GET",
@@ -148,7 +148,7 @@
         "auth": "service_jwt",
         "required_scope": "diddi-support:cases:read",
         "allowed_callers": ["diddicomms"],
-        "status": "planned"
+        "status": "implemented"
       },
       {
         "method": "GET",

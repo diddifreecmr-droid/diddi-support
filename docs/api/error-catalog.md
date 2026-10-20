@@ -14,6 +14,7 @@
 | `SOS_ALREADY_ACKNOWLEDGED` | SOS déjà pris en charge |
 | `IDEMPOTENCY_KEY_REQUIRED` | Clé d'idempotence absente |
 | `SERVICE_ORIGIN_FORBIDDEN` | Le service n'est pas propriétaire de l'origine annoncée |
+| `MESSAGE_AUTHOR_FORBIDDEN` | L'utilisateur ne correspond pas au reporter du dossier |
 | `CONTEXT_NOT_FOUND` | Le contexte ou la ressource métier n'existe pas ou n'est pas visible |
 | `CONTEXT_PROVIDER_NOT_CONFIGURED` | Aucun connecteur n'est configuré pour le service propriétaire |
 | `CONTEXT_PROVIDER_UNAVAILABLE` | Le service propriétaire est indisponible ou a expiré |
