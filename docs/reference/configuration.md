@@ -30,8 +30,16 @@ documentation, validation Docker et redeploiement.
   de fournir un contexte support, par exemple
   `{ "diddigo": { "base_url": "http://diddigo:8040", "scope": "diddigo:support-context:read" } }`.
 - `CONTEXT_REQUEST_TIMEOUT_SECONDS` : timeout de lecture des contextes métier.
-- `CONTEXT_AUTH_TOKEN` et `CONTEXT_CLIENT_ID` : identité sortante de
-  DiddiSupport vers les modules propriétaires. Le token reste un secret.
+- `CONTEXT_AUTH_TOKEN` et `CONTEXT_CLIENT_ID` : identité sortante statique de
+  secours vers les modules propriétaires. Le token reste un secret.
+- `DIDDIFREEID_SERVICE_TOKEN_URL` : endpoint DiddiFreeID pour le grant
+  `client_credentials`.
+- `DIDDISUPPORT_DIDDIGO_BASE_URL` : URL réseau de DiddiGo.
+- `DIDDISUPPORT_DIDDIGO_SERVICE_CLIENT_ID` et
+  `DIDDISUPPORT_DIDDIGO_SERVICE_CLIENT_SECRET` : identité de DiddiSupport
+  pour interroger DiddiGo. Le secret est injecté uniquement par Portainer.
+- `DIDDISUPPORT_DIDDIGO_SERVICE_AUDIENCE` et
+  `DIDDISUPPORT_DIDDIGO_SERVICE_SCOPE` : audience et scope demandés au token.
 - `BACKOFFICE_AUDIENCE` : audience JWT attendue pour les agents du Backoffice.
 ## Sécurité et pilote
 

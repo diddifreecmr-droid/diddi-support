@@ -60,6 +60,52 @@ async def test_http_context_provider_reads_standardized_context() -> None:
 
 
 @pytest.mark.asyncio
+async def test_http_context_provider_acquires_and_reuses_service_token() -> None:
+    calls: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        calls.append(request.url.path)
+        if request.url.path.endswith("/auth/service/token"):
+            assert request.headers["X-Client-ID"] == "diddisupport-staging-diddigo"
+            assert request.content == (
+                b"grant_type=client_credentials&client_id=diddisupport-staging-diddigo"
+                b"&client_secret=secret&audience=diddigo&scope=diddigo%3Asupport-context%3Aread"
+            )
+            return httpx.Response(200, json={"access_token": "service-token", "expires_in": 600})
+        assert request.headers["Authorization"] == "Bearer service-token"
+        assert request.headers["X-Client-ID"] == "diddisupport-staging-diddigo"
+        return httpx.Response(
+            200,
+            json={
+                "protocol": "diddi.context.v1",
+                "origin_service": "diddigo",
+                "resource_type": "ride",
+                "resource_id": str(RIDE_ID),
+                "data": {"status": "completed"},
+                "redacted_fields": [],
+                "as_of": "2026-10-20T11:00:00Z",
+                "fetched_at": "2026-10-20T11:00:01Z",
+            },
+        )
+
+    provider = HttpContextProvider(
+        base_url="https://go-staging.diddifree.com",
+        scope="diddigo:support-context:read",
+        token_url="https://auth-staging.diddifree.com/identity/v1/auth/service/token",
+        client_id="diddisupport-staging-diddigo",
+        client_secret="secret",
+        audience="diddigo",
+        transport=httpx.MockTransport(handler),
+    )
+
+    await provider.fetch(resource_type="ride", resource_id=RIDE_ID, request_id="req-1")
+    await provider.fetch(resource_type="ride", resource_id=RIDE_ID, request_id="req-2")
+
+    assert calls.count("/identity/v1/auth/service/token") == 1
+    assert calls.count(f"/internal/v1/support/ride/{RIDE_ID}/context") == 2
+
+
+@pytest.mark.asyncio
 async def test_context_provider_maps_not_found() -> None:
     provider = HttpContextProvider(
         base_url="http://diddigo",

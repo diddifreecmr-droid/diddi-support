@@ -23,6 +23,12 @@ class Settings(BaseSettings):
     context_request_timeout_seconds: float = Field(default=3.0, gt=0, le=30)
     context_auth_token: str = ""
     context_client_id: str = ""
+    diddifreeid_service_token_url: str = ""
+    diddisupport_diddigo_base_url: str = ""
+    diddisupport_diddigo_service_client_id: str = ""
+    diddisupport_diddigo_service_client_secret: str = ""
+    diddisupport_diddigo_service_audience: str = "diddigo"
+    diddisupport_diddigo_service_scope: str = "diddigo:support-context:read"
     diddifiles_base_url: str = ""
     diddifiles_auth_token: str = ""
     diddifiles_client_id: str = ""

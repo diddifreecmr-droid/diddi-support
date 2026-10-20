@@ -19,3 +19,4 @@
 | `CONTEXT_PROVIDER_UNAVAILABLE` | Le service propriétaire est indisponible ou a expiré |
 | `CONTEXT_PROVIDER_INVALID_RESPONSE` | La réponse du propriétaire ne respecte pas `diddi.context.v1` |
 | `CONTEXT_RESOURCE_MISMATCH` | La réponse ne correspond pas à la ressource demandée |
+| `CONTEXT_AUTHENTICATION_FAILED` | Le token service DiddiFreeID n'a pas pu être obtenu |

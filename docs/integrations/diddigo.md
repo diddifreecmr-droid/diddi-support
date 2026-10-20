@@ -35,6 +35,16 @@ CONTEXT_CONNECTORS_JSON={
 }
 ```
 
-L’activation exige aussi l’identité sortante configurée par
-`CONTEXT_AUTH_TOKEN` et `CONTEXT_CLIENT_ID`. Ces valeurs sont injectées par
-l’environnement de déploiement ; elles ne sont jamais placées dans le code.
+L’activation utilise le flux DiddiFreeID `client_credentials` :
+
+```text
+DIDDIFREEID_SERVICE_TOKEN_URL
+DIDDISUPPORT_DIDDIGO_SERVICE_CLIENT_ID
+DIDDISUPPORT_DIDDIGO_SERVICE_CLIENT_SECRET
+DIDDISUPPORT_DIDDIGO_SERVICE_AUDIENCE=diddigo
+DIDDISUPPORT_DIDDIGO_SERVICE_SCOPE=diddigo:support-context:read
+```
+
+Le secret est injecté par l’environnement de déploiement et n’est jamais
+placé dans le code ou dans Git. DiddiSupport met en cache le token jusqu’à
+quelques secondes avant son expiration, puis le renouvelle automatiquement.
