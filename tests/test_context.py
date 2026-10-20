@@ -45,6 +45,7 @@ async def test_http_context_provider_reads_standardized_context() -> None:
                 "resource_id": str(RIDE_ID),
                 "data": {"status": "completed", "fare": {"amount": 2500, "currency": "XAF"}},
                 "redacted_fields": ["driver.phone"],
+                "as_of": "2026-10-20T11:00:00Z",
             }
         ),
     )
@@ -53,6 +54,8 @@ async def test_http_context_provider_reads_standardized_context() -> None:
 
     assert context.data["status"] == "completed"
     assert context.redacted_fields == ["driver.phone"]
+    assert context.as_of is not None
+    assert context.fetched_at is not None
 
 
 @pytest.mark.asyncio

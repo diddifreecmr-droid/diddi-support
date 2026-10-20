@@ -31,13 +31,17 @@ Headers obligatoires :
     "status": "completed",
     "fare": { "amount": 2500, "currency": "XAF" }
   },
-  "redacted_fields": ["driver.phone"]
+  "redacted_fields": ["driver.phone"],
+  "as_of": "2026-10-20T11:00:00Z",
+  "fetched_at": "2026-10-20T11:00:01Z"
 }
 ```
 
 Le module propriétaire reste responsable de l’autorisation, de la fraîcheur
 et de la minimisation des données. Les champs sensibles doivent être masqués
-par le propriétaire et déclarés dans `redacted_fields`.
+par le propriétaire et déclarés dans `redacted_fields`. `as_of` indique la
+fraîcheur métier connue par le propriétaire ; `fetched_at` indique quand
+DiddiSupport a reçu la réponse.
 
 ## Endpoint DiddiSupport
 

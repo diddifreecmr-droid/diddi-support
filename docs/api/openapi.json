@@ -678,6 +678,23 @@
             },
             "type": "array",
             "title": "Redacted Fields"
+          },
+          "as_of": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of"
+          },
+          "fetched_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Fetched At"
           }
         },
         "additionalProperties": false,

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import UTC, datetime
 from typing import Protocol
 from uuid import UUID
 
@@ -16,6 +17,8 @@ class BusinessContext(BaseModel):
     resource_id: UUID
     data: dict[str, object]
     redacted_fields: list[str] = Field(default_factory=list)
+    as_of: datetime | None = None
+    fetched_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class ContextProvider(Protocol):
@@ -43,6 +46,7 @@ class ContextProviderUnavailableError(RuntimeError):
 class ContextService:
     def __init__(self, providers: Mapping[str, ContextProvider]) -> None:
         self.providers = providers
+        self.audit_events: list[dict[str, object]] = []
 
     async def get_context(
         self,
@@ -64,4 +68,14 @@ class ContextService:
             raise ContextProviderUnavailableError("CONTEXT_RESOURCE_MISMATCH")
         if context.resource_id != resource_id:
             raise ContextProviderUnavailableError("CONTEXT_RESOURCE_MISMATCH")
+        self.audit_events.append(
+            {
+                "action": "support.context.read",
+                "origin_service": origin_service,
+                "resource_type": resource_type,
+                "resource_id": str(resource_id),
+                "request_id": request_id,
+                "fetched_at": context.fetched_at.isoformat(),
+            }
+        )
         return context

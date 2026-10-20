@@ -30,6 +30,7 @@ from diddi_support.domain.cases import (
     SupportCaseService,
 )
 from diddi_support.infrastructure.context.http import providers_from_settings
+from diddi_support.infrastructure.persistence.repository import PostgresSupportCaseRepository
 
 router = APIRouter(prefix="/support/v1/internal", tags=["internal-support"])
 backoffice_router = APIRouter(prefix="/support/v1/backoffice", tags=["backoffice-support"])
@@ -172,17 +173,27 @@ async def get_business_context(
     resource_id: UUID,
     request: Request,
     principal: ServicePrincipal = Depends(require_support_service),
+    session: AsyncSession | None = Depends(get_session_optional),
 ) -> BusinessContext:
     if READ_CONTEXT_SCOPE not in principal.scopes:
         raise HTTPException(status_code=403, detail={"code": "SERVICE_SCOPE_FORBIDDEN"})
 
     try:
-        return await context_service.get_context(
+        context = await context_service.get_context(
             origin_service=origin_service,
             resource_type=resource_type,
             resource_id=resource_id,
             request_id=request.headers.get("X-Request-ID"),
         )
+        await _record_context_access(
+            session=session,
+            resource_type=resource_type,
+            resource_id=resource_id,
+            actor_id=principal.subject,
+            request_id=request.headers.get("X-Request-ID"),
+            fetched_at=context.fetched_at,
+        )
+        return context
     except (ContextNotConfiguredError, ContextNotFoundError) as exc:
         raise HTTPException(status_code=404, detail={"code": str(exc)}) from exc
     except ContextProviderUnavailableError as exc:
@@ -199,7 +210,12 @@ async def get_case_context(
     if READ_CONTEXT_SCOPE not in principal.scopes:
         raise HTTPException(status_code=403, detail={"code": "SERVICE_SCOPE_FORBIDDEN"})
 
-    return await _read_case_context(case_id=case_id, request=request, session=session)
+    return await _read_case_context(
+        case_id=case_id,
+        request=request,
+        session=session,
+        actor_id=principal.subject,
+    )
 
 
 @backoffice_router.get("/cases", response_model=list[CaseSnapshot])
@@ -296,7 +312,12 @@ async def get_backoffice_case_context(
 ) -> CaseContextResponse:
     if BACKOFFICE_READ_PERMISSION not in principal.permissions:
         raise HTTPException(status_code=403, detail={"code": "BACKOFFICE_PERMISSION_FORBIDDEN"})
-    return await _read_case_context(case_id=case_id, request=request, session=session)
+    return await _read_case_context(
+        case_id=case_id,
+        request=request,
+        session=session,
+        actor_id=principal.subject,
+    )
 
 
 def _to_snapshot(case) -> CaseSnapshot:
@@ -319,6 +340,7 @@ async def _read_case_context(
     case_id: UUID,
     request: Request,
     session: AsyncSession | None,
+    actor_id: str,
 ) -> CaseContextResponse:
     if session is None:
         case = case_service.repository.get(case_id)
@@ -339,7 +361,36 @@ async def _read_case_context(
     except ContextProviderUnavailableError as exc:
         raise HTTPException(status_code=503, detail={"code": str(exc)}) from exc
 
+    await _record_context_access(
+        session=session,
+        resource_type=case.resource_type,
+        resource_id=case.resource_id,
+        actor_id=actor_id,
+        request_id=request.headers.get("X-Request-ID"),
+        fetched_at=context.fetched_at,
+    )
+
     return CaseContextResponse(
         case=_to_snapshot(case),
         context=context,
+    )
+
+
+async def _record_context_access(
+    *,
+    session: AsyncSession | None,
+    resource_type: str,
+    resource_id: UUID,
+    actor_id: str,
+    request_id: str | None,
+    fetched_at,
+) -> None:
+    if session is None:
+        return
+    await PostgresSupportCaseRepository(session).record_context_access(
+        resource_type=resource_type,
+        resource_id=resource_id,
+        actor_id=actor_id,
+        request_id=request_id,
+        fetched_at=fetched_at,
     )

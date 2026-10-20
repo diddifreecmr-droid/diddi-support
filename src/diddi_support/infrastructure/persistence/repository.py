@@ -95,6 +95,30 @@ class PostgresSupportCaseRepository:
         await self.session.commit()
         return case
 
+    async def record_context_access(
+        self,
+        *,
+        resource_type: str,
+        resource_id: UUID,
+        actor_id: str,
+        request_id: str | None,
+        fetched_at: datetime,
+    ) -> None:
+        self.session.add(
+            SupportAuditEventModel(
+                id=uuid4(),
+                action="support.context.read",
+                target_type=resource_type,
+                target_id=str(resource_id),
+                outcome="succeeded",
+                actor_id=None,
+                request_id=request_id,
+                metadata_json={"actor_id": actor_id, "fetched_at": fetched_at.isoformat()},
+                occurred_at=datetime.now(UTC),
+            )
+        )
+        await self.session.commit()
+
     async def create_or_get(
         self,
         case: SupportCase,
