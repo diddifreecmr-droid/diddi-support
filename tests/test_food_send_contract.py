@@ -20,6 +20,9 @@ async def _test_food_and_send_use_the_same_context_contract() -> None:
                 "resource_type": resource_type,
                 "resource_id": str(RESOURCE_ID),
                 "data": {"status": "active"},
+                "redacted_fields": [],
+                "as_of": "2026-10-20T11:00:00Z",
+                "fetched_at": "2026-10-20T11:00:01Z",
             },
         )
 

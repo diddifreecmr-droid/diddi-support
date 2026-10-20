@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Protocol
 from uuid import UUID
 
@@ -9,16 +9,35 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class BusinessContext(BaseModel):
+    """Versioned envelope returned by a business module to DiddiSupport."""
+
     model_config = ConfigDict(extra="forbid")
 
-    protocol: str = Field(pattern=r"^diddi\.context\.v1$")
-    origin_service: str = Field(pattern=r"^[a-z][a-z0-9-]{1,63}$")
-    resource_type: str = Field(pattern=r"^[a-z][a-z0-9_-]{1,63}$")
-    resource_id: UUID
-    data: dict[str, object]
-    redacted_fields: list[str] = Field(default_factory=list)
-    as_of: datetime | None = None
-    fetched_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    protocol: str = Field(
+        pattern=r"^diddi\.context\.v1$",
+        description="Stable context contract identifier.",
+    )
+    origin_service: str = Field(
+        pattern=r"^[a-z][a-z0-9-]{1,63}$",
+        description="Service that owns the referenced business resource.",
+    )
+    resource_type: str = Field(
+        pattern=r"^[a-z][a-z0-9_-]{1,63}$",
+        description="Owner-defined resource type, for example ride or order.",
+    )
+    resource_id: UUID = Field(description="Stable identifier of the business resource.")
+    data: dict[str, object] = Field(
+        description="Minimal support-safe context; the owner remains its source of truth.",
+    )
+    redacted_fields: list[str] = Field(
+        description="Dotted paths intentionally removed or masked from data.",
+    )
+    as_of: datetime = Field(
+        description="Timestamp at which the owner says the business state was current.",
+    )
+    fetched_at: datetime = Field(
+        description="Timestamp at which DiddiSupport received this context."
+    )
 
 
 class ContextProvider(Protocol):

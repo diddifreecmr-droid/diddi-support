@@ -4,6 +4,43 @@ DiddiSupport ne devient pas propriétaire des courses, commandes, livraisons,
 paiements ou paies. Il interroge le module qui possède la donnée via un
 connecteur configuré au déploiement.
 
+## Enveloppe normative `diddi.context.v1`
+
+Tous les modules propriétaires doivent retourner exactement cette enveloppe.
+Les champs inconnus supplémentaires sont interdits au niveau de l'enveloppe ;
+la propriété `data` contient uniquement le schéma métier du module propriétaire.
+
+```json
+{
+  "protocol": "diddi.context.v1",
+  "origin_service": "diddigo",
+  "resource_type": "ride",
+  "resource_id": "11111111-1111-1111-1111-111111111111",
+  "data": {
+    "status": "completed"
+  },
+  "redacted_fields": ["driver.phone"],
+  "as_of": "2026-10-20T11:00:00Z",
+  "fetched_at": "2026-10-20T11:00:01Z"
+}
+```
+
+Champs obligatoires :
+
+- `protocol` : valeur exacte `diddi.context.v1` ;
+- `origin_service` : service propriétaire ;
+- `resource_type` : type de ressource ;
+- `resource_id` : UUID stable de la ressource ;
+- `data` : contexte minimal et sûr pour le support ;
+- `redacted_fields` : chemins des champs masqués ou supprimés ;
+- `as_of` : fraîcheur métier annoncée par le propriétaire ;
+- `fetched_at` : date de réception par DiddiSupport.
+
+Le contenu de `data` est spécifique au propriétaire et doit être décrit dans
+la documentation OpenAPI de ce propriétaire. Il ne doit jamais contenir de
+secret, token, numéro complet de carte, donnée KYC inutile ou localisation
+précise non nécessaire.
+
 ## Appel sortant standard
 
 Pour un propriétaire `diddigo` et une ressource `ride`, DiddiSupport appelle :
@@ -19,23 +56,13 @@ Headers obligatoires :
 - `X-Request-ID` propagé depuis la requête support ;
 - `X-Support-Context-Scope: {owner}:support-context:read`.
 
-## Réponse obligatoire
+## Réponse et erreurs
 
-```json
-{
-  "protocol": "diddi.context.v1",
-  "origin_service": "diddigo",
-  "resource_type": "ride",
-  "resource_id": "11111111-1111-1111-1111-111111111111",
-  "data": {
-    "status": "completed",
-    "fare": { "amount": 2500, "currency": "XAF" }
-  },
-  "redacted_fields": ["driver.phone"],
-  "as_of": "2026-10-20T11:00:00Z",
-  "fetched_at": "2026-10-20T11:00:01Z"
-}
-```
+Le propriétaire répond `200` avec l'enveloppe normative. Il répond `404` avec
+`RESOURCE_NOT_FOUND` si la ressource est inconnue ou non visible, `401` avec
+`SERVICE_TOKEN_REQUIRED` si l'identité est absente ou invalide, `403` avec
+`SERVICE_SCOPE_FORBIDDEN` si le scope manque, et `503` avec
+`DEPENDENCY_UNAVAILABLE` si le module ne peut pas répondre.
 
 Le module propriétaire reste responsable de l’autorisation, de la fraîcheur
 et de la minimisation des données. Les champs sensibles doivent être masqués

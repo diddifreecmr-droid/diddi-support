@@ -1950,51 +1950,52 @@
           "protocol": {
             "type": "string",
             "pattern": "^diddi\\.context\\.v1$",
-            "title": "Protocol"
+            "title": "Protocol",
+            "description": "Stable context contract identifier."
           },
           "origin_service": {
             "type": "string",
             "pattern": "^[a-z][a-z0-9-]{1,63}$",
-            "title": "Origin Service"
+            "title": "Origin Service",
+            "description": "Service that owns the referenced business resource."
           },
           "resource_type": {
             "type": "string",
             "pattern": "^[a-z][a-z0-9_-]{1,63}$",
-            "title": "Resource Type"
+            "title": "Resource Type",
+            "description": "Owner-defined resource type, for example ride or order."
           },
           "resource_id": {
             "type": "string",
             "format": "uuid",
-            "title": "Resource Id"
+            "title": "Resource Id",
+            "description": "Stable identifier of the business resource."
           },
           "data": {
             "additionalProperties": true,
             "type": "object",
-            "title": "Data"
+            "title": "Data",
+            "description": "Minimal support-safe context; the owner remains its source of truth."
           },
           "redacted_fields": {
             "items": {
               "type": "string"
             },
             "type": "array",
-            "title": "Redacted Fields"
+            "title": "Redacted Fields",
+            "description": "Dotted paths intentionally removed or masked from data."
           },
           "as_of": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "As Of"
+            "type": "string",
+            "format": "date-time",
+            "title": "As Of",
+            "description": "Timestamp at which the owner says the business state was current."
           },
           "fetched_at": {
             "type": "string",
             "format": "date-time",
-            "title": "Fetched At"
+            "title": "Fetched At",
+            "description": "Timestamp at which DiddiSupport received this context."
           }
         },
         "additionalProperties": false,
@@ -2004,9 +2005,13 @@
           "origin_service",
           "resource_type",
           "resource_id",
-          "data"
+          "data",
+          "redacted_fields",
+          "as_of",
+          "fetched_at"
         ],
-        "title": "BusinessContext"
+        "title": "BusinessContext",
+        "description": "Versioned envelope returned by a business module to DiddiSupport."
       },
       "CaseContextResponse": {
         "properties": {

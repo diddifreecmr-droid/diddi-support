@@ -46,6 +46,7 @@ async def test_http_context_provider_reads_standardized_context() -> None:
                 "data": {"status": "completed", "fare": {"amount": 2500, "currency": "XAF"}},
                 "redacted_fields": ["driver.phone"],
                 "as_of": "2026-10-20T11:00:00Z",
+                "fetched_at": "2026-10-20T11:00:01Z",
             }
         ),
     )
@@ -80,6 +81,9 @@ async def test_context_service_rejects_mismatched_resource() -> None:
                 resource_type="order",
                 resource_id=RIDE_ID,
                 data={},
+                redacted_fields=[],
+                as_of="2026-10-20T11:00:00Z",
+                fetched_at="2026-10-20T11:00:01Z",
             )
 
     with pytest.raises(ContextProviderUnavailableError, match="CONTEXT_RESOURCE_MISMATCH"):
@@ -100,6 +104,9 @@ def test_internal_context_endpoint_returns_owner_context() -> None:
                 resource_type="ride",
                 resource_id=RIDE_ID,
                 data={"status": "completed"},
+                redacted_fields=[],
+                as_of="2026-10-20T11:00:00Z",
+                fetched_at="2026-10-20T11:00:01Z",
             )
 
     original_service = internal_router.context_service
@@ -156,6 +163,9 @@ def test_case_context_endpoint_resolves_case_reference() -> None:
                 resource_type="ride",
                 resource_id=RIDE_ID,
                 data={"status": "completed", "driver": {"id": "driver-1"}},
+                redacted_fields=[],
+                as_of="2026-10-20T11:00:00Z",
+                fetched_at="2026-10-20T11:00:01Z",
             )
 
     original_service = internal_router.context_service
@@ -194,6 +204,9 @@ def test_backoffice_context_endpoint_enforces_agent_permission() -> None:
                 resource_type="ride",
                 resource_id=RIDE_ID,
                 data={"status": "in_progress"},
+                redacted_fields=[],
+                as_of="2026-10-20T11:00:00Z",
+                fetched_at="2026-10-20T11:00:01Z",
             )
 
     original_service = internal_router.context_service
@@ -227,3 +240,27 @@ def test_backoffice_context_endpoint_rejects_missing_permission() -> None:
         assert response.json()["detail"]["code"] == "BACKOFFICE_PERMISSION_FORBIDDEN"
     finally:
         app.dependency_overrides.pop(require_support_agent, None)
+
+
+def test_business_context_requires_freshness_and_rejects_unknown_envelope_fields() -> None:
+    with pytest.raises(ValueError):
+        BusinessContext(
+            protocol="diddi.context.v1",
+            origin_service="diddigo",
+            resource_type="ride",
+            resource_id=RIDE_ID,
+            data={"status": "completed"},
+            redacted_fields=[],
+        )
+
+    with pytest.raises(ValueError):
+        BusinessContext(
+            protocol="diddi.context.v1",
+            origin_service="diddigo",
+            resource_type="ride",
+            resource_id=RIDE_ID,
+            data={"status": "completed"},
+            redacted_fields=[],
+            as_of="2026-10-20T11:00:00Z",
+            unexpected="must be rejected",
+        )
