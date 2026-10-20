@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     diddifiles_auth_token: str = ""
     diddifiles_client_id: str = ""
     attachment_max_bytes: int = Field(default=10_485_760, ge=1, le=104_857_600)
+    sos_max_notification_attempts: int = Field(default=3, ge=1, le=10)
+    sos_escalation_after_seconds: int = Field(default=60, ge=1, le=86_400)
 
 
 @lru_cache

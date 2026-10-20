@@ -192,6 +192,41 @@
         "operation": "create_temporary_attachment_access",
         "auth": "user_jwt",
         "required_permission": "diddi-support:attachments-read"
+      },
+      {
+        "method": "GET",
+        "path": "/support/v1/backoffice/sos",
+        "operation": "list_sos_queue",
+        "auth": "user_jwt",
+        "required_permission": "diddi-support:read"
+      },
+      {
+        "method": "POST",
+        "path": "/support/v1/backoffice/sos/{alert_id}/confirm",
+        "operation": "confirm_sos",
+        "auth": "user_jwt",
+        "required_permission": "diddi-support:sos-operate"
+      },
+      {
+        "method": "POST",
+        "path": "/support/v1/backoffice/sos/{alert_id}/start",
+        "operation": "start_sos_handling",
+        "auth": "user_jwt",
+        "required_permission": "diddi-support:sos-operate"
+      },
+      {
+        "method": "POST",
+        "path": "/support/v1/backoffice/sos/{alert_id}/complete",
+        "operation": "complete_sos_handling",
+        "auth": "user_jwt",
+        "required_permission": "diddi-support:sos-operate"
+      },
+      {
+        "method": "POST",
+        "path": "/support/v1/backoffice/sos/{alert_id}/retry-notification",
+        "operation": "retry_sos_notification",
+        "auth": "user_jwt",
+        "required_permission": "diddi-support:sos-operate"
       }
     ],
     "context_routes_expected_from_owner": [
@@ -253,6 +288,7 @@
       "diddi-support:assign",
       "diddi-support:sos-operate",
       "diddi-support:attachments-read",
+      "diddi-support:sos-operate",
       "diddi-support:audit-read"
     ]
   },

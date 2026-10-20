@@ -189,6 +189,81 @@
         }
       }
     },
+    "/support/v1/internal/sos": {
+      "post": {
+        "tags": [
+          "internal-support"
+        ],
+        "summary": "Create Sos Alert",
+        "operationId": "create_sos_alert_support_v1_internal_sos_post",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Client-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Client-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSosRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SosResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/support/v1/internal/cases/{case_id}/context": {
       "get": {
         "tags": [
@@ -482,6 +557,307 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CaseSnapshot"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/support/v1/backoffice/sos": {
+      "get": {
+        "tags": [
+          "backoffice-support"
+        ],
+        "summary": "List Backoffice Sos",
+        "operationId": "list_backoffice_sos_support_v1_backoffice_sos_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SosResponse"
+                  },
+                  "title": "Response List Backoffice Sos Support V1 Backoffice Sos Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/support/v1/backoffice/sos/{alert_id}/confirm": {
+      "post": {
+        "tags": [
+          "backoffice-support"
+        ],
+        "summary": "Confirm Backoffice Sos",
+        "operationId": "confirm_backoffice_sos_support_v1_backoffice_sos__alert_id__confirm_post",
+        "parameters": [
+          {
+            "name": "alert_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Alert Id"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SosResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/support/v1/backoffice/sos/{alert_id}/start": {
+      "post": {
+        "tags": [
+          "backoffice-support"
+        ],
+        "summary": "Start Backoffice Sos",
+        "operationId": "start_backoffice_sos_support_v1_backoffice_sos__alert_id__start_post",
+        "parameters": [
+          {
+            "name": "alert_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Alert Id"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SosResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/support/v1/backoffice/sos/{alert_id}/complete": {
+      "post": {
+        "tags": [
+          "backoffice-support"
+        ],
+        "summary": "Complete Backoffice Sos",
+        "operationId": "complete_backoffice_sos_support_v1_backoffice_sos__alert_id__complete_post",
+        "parameters": [
+          {
+            "name": "alert_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Alert Id"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SosResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/support/v1/backoffice/sos/{alert_id}/retry-notification": {
+      "post": {
+        "tags": [
+          "backoffice-support"
+        ],
+        "summary": "Retry Backoffice Sos Notification",
+        "operationId": "retry_backoffice_sos_notification_support_v1_backoffice_sos__alert_id__retry_notification_post",
+        "parameters": [
+          {
+            "name": "alert_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Alert Id"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SosResponse"
                 }
               }
             }
@@ -1387,6 +1763,82 @@
         ],
         "title": "CreateMessageRequest"
       },
+      "CreateSosRequest": {
+        "properties": {
+          "reporter_user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Reporter User Id"
+          },
+          "origin_service": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]{1,63}$",
+            "title": "Origin Service"
+          },
+          "case_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Id"
+          },
+          "source_alert_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 160
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Alert Id"
+          },
+          "source_notification_sent": {
+            "type": "boolean",
+            "title": "Source Notification Sent",
+            "default": false
+          },
+          "location_latitude": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 90.0,
+                "minimum": -90.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Latitude"
+          },
+          "location_longitude": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 180.0,
+                "minimum": -180.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Longitude"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "reporter_user_id",
+          "origin_service"
+        ],
+        "title": "CreateSosRequest"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1461,6 +1913,106 @@
           "system_event"
         ],
         "title": "MessageVisibility"
+      },
+      "SosHandlingStatus": {
+        "type": "string",
+        "enum": [
+          "unconfirmed",
+          "confirmed",
+          "in_progress",
+          "completed"
+        ],
+        "title": "SosHandlingStatus"
+      },
+      "SosNotificationStatus": {
+        "type": "string",
+        "enum": [
+          "recorded",
+          "pending",
+          "sent",
+          "failed"
+        ],
+        "title": "SosNotificationStatus"
+      },
+      "SosResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "reporter_user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Reporter User Id"
+          },
+          "origin_service": {
+            "type": "string",
+            "title": "Origin Service"
+          },
+          "case_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Case Id"
+          },
+          "source_alert_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Alert Id"
+          },
+          "notification_status": {
+            "$ref": "#/components/schemas/SosNotificationStatus"
+          },
+          "handling_status": {
+            "$ref": "#/components/schemas/SosHandlingStatus"
+          },
+          "notification_attempts": {
+            "type": "integer",
+            "title": "Notification Attempts"
+          },
+          "escalation_level": {
+            "type": "integer",
+            "title": "Escalation Level"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "reporter_user_id",
+          "origin_service",
+          "case_id",
+          "source_alert_id",
+          "notification_status",
+          "handling_status",
+          "notification_attempts",
+          "escalation_level",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "SosResponse"
       },
       "TemporaryFileAccess": {
         "properties": {

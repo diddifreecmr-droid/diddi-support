@@ -19,6 +19,7 @@ from diddi_support.application.messages import (
     PersistentSupportConversationService,
     SupportConversationService,
 )
+from diddi_support.application.sos import PersistentSosService, SosService
 from diddi_support.core.auth import (
     BackofficePrincipal,
     ServicePrincipal,
@@ -43,6 +44,7 @@ from diddi_support.domain.messages import (
     SupportAttachment,
     SupportMessage,
 )
+from diddi_support.domain.sos import SosAlert, SosHandlingStatus, SosNotificationStatus
 from diddi_support.infrastructure.context.http import providers_from_settings
 from diddi_support.infrastructure.files.client import (
     DiddiFilesError,
@@ -57,6 +59,7 @@ repository = InMemorySupportCaseRepository()
 case_service = SupportCaseService(repository)
 context_service = ContextService(providers_from_settings())
 conversation_service = SupportConversationService()
+sos_service = SosService()
 diddifiles_client = client_from_settings()
 CREATE_CASE_SCOPE = "diddi-support:cases:create"
 READ_CONTEXT_SCOPE = "diddi-support:cases:read"
@@ -163,6 +166,32 @@ class AttachmentResponse(BaseModel):
     created_at: datetime
 
 
+class CreateSosRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reporter_user_id: UUID
+    origin_service: str = Field(pattern=r"^[a-z][a-z0-9-]{1,63}$")
+    case_id: UUID | None = None
+    source_alert_id: str | None = Field(default=None, max_length=160)
+    source_notification_sent: bool = False
+    location_latitude: float | None = Field(default=None, ge=-90, le=90)
+    location_longitude: float | None = Field(default=None, ge=-180, le=180)
+
+
+class SosResponse(BaseModel):
+    id: UUID
+    reporter_user_id: UUID
+    origin_service: str
+    case_id: UUID | None
+    source_alert_id: str | None
+    notification_status: SosNotificationStatus
+    handling_status: SosHandlingStatus
+    notification_attempts: int
+    escalation_level: int
+    created_at: datetime
+    updated_at: datetime
+
+
 @router.post("/cases", response_model=CaseResponse, status_code=status.HTTP_201_CREATED)
 async def create_case(
     payload: CreateCaseRequest,
@@ -257,6 +286,36 @@ async def get_business_context(
         raise HTTPException(status_code=404, detail={"code": str(exc)}) from exc
     except ContextProviderUnavailableError as exc:
         raise HTTPException(status_code=503, detail={"code": str(exc)}) from exc
+
+
+@router.post("/sos", response_model=SosResponse, status_code=status.HTTP_201_CREATED)
+async def create_sos_alert(
+    payload: CreateSosRequest,
+    request: Request,
+    principal: ServicePrincipal = Depends(require_support_service),
+    session: AsyncSession | None = Depends(get_session_optional),
+) -> SosResponse:
+    if "diddi-support:sos:create" not in principal.scopes:
+        raise HTTPException(status_code=403, detail={"code": "SERVICE_SCOPE_FORBIDDEN"})
+    if principal.subject != f"service:{payload.origin_service}":
+        raise HTTPException(status_code=403, detail={"code": "SERVICE_ORIGIN_FORBIDDEN"})
+    alert = SosAlert(
+        reporter_user_id=payload.reporter_user_id,
+        origin_service=payload.origin_service,
+        case_id=payload.case_id,
+        source_alert_id=payload.source_alert_id,
+        source_notification_sent=payload.source_notification_sent,
+        location_latitude=payload.location_latitude,
+        location_longitude=payload.location_longitude,
+    )
+    if session is None:
+        alert, _ = sos_service.create(alert)
+    else:
+        alert = await PersistentSosService(session).create(
+            alert,
+            request_id=request.headers.get("X-Request-ID"),
+        )
+    return _to_sos_response(alert)
 
 
 @router.get("/cases/{case_id}/context", response_model=CaseContextResponse)
@@ -360,6 +419,101 @@ async def transition_backoffice_case(
     if case is None:
         raise HTTPException(status_code=404, detail={"code": "CASE_NOT_FOUND"})
     return _to_snapshot(case)
+
+
+@backoffice_router.get("/sos", response_model=list[SosResponse])
+async def list_backoffice_sos(
+    principal: BackofficePrincipal = Depends(require_support_agent),
+    session: AsyncSession | None = Depends(get_session_optional),
+    limit: int = Query(default=50, ge=1, le=100),
+) -> list[SosResponse]:
+    if "diddi-support:read" not in principal.permissions:
+        raise HTTPException(status_code=403, detail={"code": "BACKOFFICE_PERMISSION_FORBIDDEN"})
+    if session is None:
+        alerts = sos_service.queue(limit=limit)
+    else:
+        alerts = await PersistentSosService(session).queue(limit=limit)
+    return [_to_sos_response(alert) for alert in alerts]
+
+
+@backoffice_router.post("/sos/{alert_id}/confirm", response_model=SosResponse)
+async def confirm_backoffice_sos(
+    alert_id: UUID,
+    request: Request,
+    principal: BackofficePrincipal = Depends(require_support_agent),
+    session: AsyncSession | None = Depends(get_session_optional),
+) -> SosResponse:
+    if "diddi-support:sos-operate" not in principal.permissions:
+        raise HTTPException(status_code=403, detail={"code": "BACKOFFICE_PERMISSION_FORBIDDEN"})
+    alert = await _load_sos(alert_id, session)
+    if alert is None:
+        raise HTTPException(status_code=404, detail={"code": "SOS_NOT_FOUND"})
+    alert.confirm()
+    alert = await _save_sos(alert, session, "support.sos.acknowledged", principal.subject, request)
+    return _to_sos_response(alert)
+
+
+@backoffice_router.post("/sos/{alert_id}/start", response_model=SosResponse)
+async def start_backoffice_sos(
+    alert_id: UUID,
+    request: Request,
+    principal: BackofficePrincipal = Depends(require_support_agent),
+    session: AsyncSession | None = Depends(get_session_optional),
+) -> SosResponse:
+    if "diddi-support:sos-operate" not in principal.permissions:
+        raise HTTPException(status_code=403, detail={"code": "BACKOFFICE_PERMISSION_FORBIDDEN"})
+    alert = await _load_sos(alert_id, session)
+    if alert is None:
+        raise HTTPException(status_code=404, detail={"code": "SOS_NOT_FOUND"})
+    try:
+        alert.start()
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail={"code": "SOS_CONFIRMATION_REQUIRED"}) from exc
+    alert = await _save_sos(alert, session, "support.sos.started", principal.subject, request)
+    return _to_sos_response(alert)
+
+
+@backoffice_router.post("/sos/{alert_id}/complete", response_model=SosResponse)
+async def complete_backoffice_sos(
+    alert_id: UUID,
+    request: Request,
+    principal: BackofficePrincipal = Depends(require_support_agent),
+    session: AsyncSession | None = Depends(get_session_optional),
+) -> SosResponse:
+    if "diddi-support:sos-operate" not in principal.permissions:
+        raise HTTPException(status_code=403, detail={"code": "BACKOFFICE_PERMISSION_FORBIDDEN"})
+    alert = await _load_sos(alert_id, session)
+    if alert is None:
+        raise HTTPException(status_code=404, detail={"code": "SOS_NOT_FOUND"})
+    try:
+        alert.complete()
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail={"code": "SOS_CONFIRMATION_REQUIRED"}) from exc
+    alert = await _save_sos(alert, session, "support.sos.completed", principal.subject, request)
+    return _to_sos_response(alert)
+
+
+@backoffice_router.post("/sos/{alert_id}/retry-notification", response_model=SosResponse)
+async def retry_backoffice_sos_notification(
+    alert_id: UUID,
+    request: Request,
+    principal: BackofficePrincipal = Depends(require_support_agent),
+    session: AsyncSession | None = Depends(get_session_optional),
+) -> SosResponse:
+    if "diddi-support:sos-operate" not in principal.permissions:
+        raise HTTPException(status_code=403, detail={"code": "BACKOFFICE_PERMISSION_FORBIDDEN"})
+    alert = await _load_sos(alert_id, session)
+    if alert is None:
+        raise HTTPException(status_code=404, detail={"code": "SOS_NOT_FOUND"})
+    alert.retry_notification(max_attempts=settings.sos_max_notification_attempts)
+    alert = await _save_sos(
+        alert,
+        session,
+        "support.sos.notification.retry",
+        principal.subject,
+        request,
+    )
+    return _to_sos_response(alert)
 
 
 @backoffice_router.post("/cases/{case_id}/messages", response_model=MessageResponse)
@@ -530,6 +684,23 @@ async def _load_case(case_id: UUID, session: AsyncSession | None):
     return await PersistentSupportCaseService(session).get(case_id)
 
 
+async def _load_sos(alert_id: UUID, session: AsyncSession | None):
+    if session is None:
+        return sos_service.get(alert_id)
+    return await PersistentSosService(session).get(alert_id)
+
+
+async def _save_sos(alert, session, action: str, actor_id: str, request: Request):
+    if session is None:
+        return alert
+    return await PersistentSosService(session).save(
+        alert,
+        action=action,
+        actor_id=actor_id,
+        request_id=request.headers.get("X-Request-ID"),
+    )
+
+
 def _to_snapshot(case) -> CaseSnapshot:
     return CaseSnapshot(
         id=case.id,
@@ -542,6 +713,22 @@ def _to_snapshot(case) -> CaseSnapshot:
         priority=case.priority,
         status=case.status.value,
         assigned_agent_id=case.assigned_agent_id,
+    )
+
+
+def _to_sos_response(alert: SosAlert) -> SosResponse:
+    return SosResponse(
+        id=alert.id,
+        reporter_user_id=alert.reporter_user_id,
+        origin_service=alert.origin_service,
+        case_id=alert.case_id,
+        source_alert_id=alert.source_alert_id,
+        notification_status=alert.notification_status,
+        handling_status=alert.handling_status,
+        notification_attempts=alert.notification_attempts,
+        escalation_level=alert.escalation_level,
+        created_at=alert.created_at,
+        updated_at=alert.updated_at,
     )
 
 

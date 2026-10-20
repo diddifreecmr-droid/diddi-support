@@ -21,7 +21,13 @@ from diddi_support.domain.messages import (
     SupportAttachment,
     SupportMessage,
 )
+from diddi_support.domain.sos import (
+    SosAlert,
+    SosHandlingStatus,
+    SosNotificationStatus,
+)
 from diddi_support.infrastructure.persistence.models import (
+    SosAlertModel,
     SupportAttachmentModel,
     SupportAuditEventModel,
     SupportCaseModel,
@@ -265,6 +271,135 @@ class PostgresSupportCaseRepository:
         model = await self.session.get(SupportAttachmentModel, attachment_id)
         return _attachment_to_domain(model) if model is not None else None
 
+    async def add_sos_alert(
+        self,
+        alert: SosAlert,
+        *,
+        request_id: str | None = None,
+    ) -> SosAlert:
+        self.session.add(
+            SosAlertModel(
+                id=alert.id,
+                reporter_user_id=alert.reporter_user_id,
+                origin_service=alert.origin_service,
+                case_id=alert.case_id,
+                source_alert_id=alert.source_alert_id,
+                location_latitude=alert.location_latitude,
+                location_longitude=alert.location_longitude,
+                notification_status=alert.notification_status.value,
+                handling_status=alert.handling_status.value,
+                source_notification_sent=alert.source_notification_sent,
+                notification_attempts=alert.notification_attempts,
+                escalation_level=alert.escalation_level,
+                created_at=alert.created_at,
+                updated_at=alert.updated_at,
+            )
+        )
+        self.session.add(
+            SupportAuditEventModel(
+                id=uuid4(),
+                action="support.sos.created",
+                target_type="support_sos_alert",
+                target_id=str(alert.id),
+                outcome="succeeded",
+                actor_id=alert.reporter_user_id,
+                request_id=request_id,
+                metadata_json={"origin_service": alert.origin_service},
+                occurred_at=datetime.now(UTC),
+            )
+        )
+        self.session.add(
+            SupportOutboxEventModel(
+                id=uuid4(),
+                event_type="support.sos.created",
+                aggregate_type="support_sos_alert",
+                aggregate_id=str(alert.id),
+                payload={
+                    "origin_service": alert.origin_service,
+                    "case_id": str(alert.case_id) if alert.case_id else None,
+                    "notification_status": alert.notification_status.value,
+                },
+                correlation_id=request_id,
+                created_at=datetime.now(UTC),
+            )
+        )
+        if not alert.source_notification_sent:
+            self.session.add(
+                SupportOutboxEventModel(
+                    id=uuid4(),
+                    event_type="support.sos.notification.requested",
+                    aggregate_type="support_sos_alert",
+                    aggregate_id=str(alert.id),
+                    payload={"notification_attempt": alert.notification_attempts},
+                    correlation_id=request_id,
+                    created_at=datetime.now(UTC),
+                )
+            )
+        await self.session.commit()
+        return alert
+
+    async def get_sos_alert(self, alert_id: UUID) -> SosAlert | None:
+        model = await self.session.get(SosAlertModel, alert_id)
+        return _sos_to_domain(model) if model is not None else None
+
+    async def list_sos_alerts(self, *, limit: int = 50) -> list[SosAlert]:
+        result = await self.session.execute(
+            select(SosAlertModel)
+            .where(SosAlertModel.handling_status != SosHandlingStatus.COMPLETED.value)
+            .order_by(SosAlertModel.escalation_level, SosAlertModel.created_at)
+            .limit(limit)
+        )
+        return [_sos_to_domain(model) for model in result.scalars().all()]
+
+    async def save_sos_alert(
+        self,
+        alert: SosAlert,
+        *,
+        action: str,
+        actor_id: str,
+        request_id: str | None = None,
+    ) -> SosAlert:
+        model = await self.session.get(SosAlertModel, alert.id)
+        if model is None:
+            return alert
+        model.notification_status = alert.notification_status.value
+        model.handling_status = alert.handling_status.value
+        model.notification_attempts = alert.notification_attempts
+        model.escalation_level = alert.escalation_level
+        model.updated_at = alert.updated_at
+        self.session.add(
+            SupportAuditEventModel(
+                id=uuid4(),
+                action=action,
+                target_type="support_sos_alert",
+                target_id=str(alert.id),
+                outcome="succeeded",
+                actor_id=None,
+                request_id=request_id,
+                metadata_json={
+                    "actor_id": actor_id,
+                    "handling_status": alert.handling_status.value,
+                },
+                occurred_at=datetime.now(UTC),
+            )
+        )
+        self.session.add(
+            SupportOutboxEventModel(
+                id=uuid4(),
+                event_type=action,
+                aggregate_type="support_sos_alert",
+                aggregate_id=str(alert.id),
+                payload={
+                    "notification_status": alert.notification_status.value,
+                    "handling_status": alert.handling_status.value,
+                },
+                correlation_id=request_id,
+                created_at=datetime.now(UTC),
+            )
+        )
+        await self.session.commit()
+        return alert
+
     async def create_or_get(
         self,
         case: SupportCase,
@@ -381,4 +516,23 @@ def _attachment_to_domain(model: SupportAttachmentModel) -> SupportAttachment:
         mime_type=model.mime_type,
         size_bytes=model.size_bytes,
         created_at=model.created_at,
+    )
+
+
+def _sos_to_domain(model: SosAlertModel) -> SosAlert:
+    return SosAlert(
+        id=model.id,
+        reporter_user_id=model.reporter_user_id,
+        origin_service=model.origin_service,
+        case_id=model.case_id,
+        source_alert_id=model.source_alert_id,
+        location_latitude=model.location_latitude,
+        location_longitude=model.location_longitude,
+        source_notification_sent=model.source_notification_sent,
+        notification_status=SosNotificationStatus(model.notification_status),
+        handling_status=SosHandlingStatus(model.handling_status),
+        notification_attempts=model.notification_attempts,
+        escalation_level=model.escalation_level,
+        created_at=model.created_at,
+        updated_at=model.updated_at,
     )

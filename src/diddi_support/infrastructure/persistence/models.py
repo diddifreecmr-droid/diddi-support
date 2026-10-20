@@ -96,3 +96,22 @@ class SupportAttachmentModel(Base):
     mime_type: Mapped[str] = mapped_column(String(120))
     size_bytes: Mapped[int] = mapped_column(Integer)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SosAlertModel(Base):
+    __tablename__ = "support_sos_alerts"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
+    reporter_user_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True))
+    origin_service: Mapped[str] = mapped_column(String(64))
+    case_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True))
+    source_alert_id: Mapped[str | None] = mapped_column(String(160), unique=True)
+    location_latitude: Mapped[float | None]
+    location_longitude: Mapped[float | None]
+    notification_status: Mapped[str] = mapped_column(String(20))
+    handling_status: Mapped[str] = mapped_column(String(20))
+    source_notification_sent: Mapped[bool]
+    notification_attempts: Mapped[int] = mapped_column(Integer, default=0)
+    escalation_level: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
