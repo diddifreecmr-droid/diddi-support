@@ -33,3 +33,9 @@ documentation, validation Docker et redeploiement.
 - `CONTEXT_AUTH_TOKEN` et `CONTEXT_CLIENT_ID` : identité sortante de
   DiddiSupport vers les modules propriétaires. Le token reste un secret.
 - `BACKOFFICE_AUDIENCE` : audience JWT attendue pour les agents du Backoffice.
+## Sécurité et pilote
+
+Les variables `IDENTITY_JWKS_URL`, `IDENTITY_ISSUER`, `SERVICE_AUDIENCE` et
+`BACKOFFICE_AUDIENCE` contrôlent les identités. Les connecteurs et seuils
+métier sont injectés au déploiement ; une modification nécessite un
+redeploiement.
