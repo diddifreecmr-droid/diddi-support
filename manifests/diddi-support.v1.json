@@ -195,6 +195,13 @@
       },
       {
         "method": "POST",
+        "path": "/support/v1/backoffice/cases/{case_id}/handoff",
+        "operation": "change_conversation_handoff",
+        "auth": "user_jwt",
+        "required_permission": "diddi-support:reply"
+      },
+      {
+        "method": "POST",
         "path": "/support/v1/backoffice/cases/{case_id}/messages",
         "operation": "create_support_message",
         "auth": "user_jwt",

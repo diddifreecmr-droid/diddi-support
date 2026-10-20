@@ -16,6 +16,7 @@ from diddi_support.application.context import (
     ContextProviderUnavailableError,
     ContextService,
 )
+from diddi_support.application.handoff import ConversationModeService
 from diddi_support.application.messages import (
     PersistentSupportConversationService,
     SupportConversationService,
@@ -39,6 +40,7 @@ from diddi_support.domain.cases import (
     MessageVisibility,
     SupportCaseService,
 )
+from diddi_support.domain.handoff import ConversationMode, HandoffConflictError
 from diddi_support.domain.messages import (
     ALLOWED_ATTACHMENT_MIME_TYPES,
     AttachmentPurpose,
@@ -63,6 +65,7 @@ context_service = ContextService(providers_from_settings())
 conversation_service = SupportConversationService()
 sos_service = SosService()
 action_service = ActionService()
+handoff_service = ConversationModeService()
 diddifiles_client = client_from_settings()
 CREATE_CASE_SCOPE = "diddi-support:cases:create"
 READ_CONTEXT_SCOPE = "diddi-support:cases:read"
@@ -230,6 +233,15 @@ class ActionResponse(BaseModel):
     result_code: str | None
     created_at: datetime
     updated_at: datetime
+
+
+class HandoffRequest(BaseModel):
+    mode: ConversationMode
+
+
+class HandoffResponse(BaseModel):
+    case_id: UUID
+    mode: ConversationMode
 
 
 @router.post("/cases", response_model=CaseResponse, status_code=status.HTTP_201_CREATED)
@@ -756,6 +768,33 @@ async def list_backoffice_timeline(
         for attachment in attachments
     )
     return sorted(events, key=lambda event: event.occurred_at)
+
+
+@backoffice_router.post("/cases/{case_id}/handoff", response_model=HandoffResponse)
+async def update_backoffice_handoff(
+    case_id: UUID,
+    payload: HandoffRequest,
+    principal: BackofficePrincipal = Depends(require_support_agent),
+) -> HandoffResponse:
+    if "diddi-support:reply" not in principal.permissions:
+        raise HTTPException(status_code=403, detail={"code": "BACKOFFICE_PERMISSION_FORBIDDEN"})
+    if case_service.repository.get(case_id) is None:
+        raise HTTPException(status_code=404, detail={"code": "CASE_NOT_FOUND"})
+    try:
+        if payload.mode == ConversationMode.HUMAN_REQUESTED:
+            mode = handoff_service.request_human(case_id)
+        elif payload.mode == ConversationMode.HUMAN_ACTIVE:
+            if "diddi-support:write" not in principal.permissions:
+                raise HTTPException(
+                    status_code=403,
+                    detail={"code": "BACKOFFICE_PERMISSION_FORBIDDEN"},
+                )
+            mode = handoff_service.activate_human(case_id)
+        else:
+            raise HTTPException(status_code=400, detail={"code": "AI_MODE_CANNOT_BE_FORCED"})
+    except HandoffConflictError as exc:
+        raise HTTPException(status_code=409, detail={"code": str(exc)}) from exc
+    return HandoffResponse(case_id=case_id, mode=mode)
 
 
 @backoffice_router.post("/cases/{case_id}/attachments", response_model=AttachmentResponse)

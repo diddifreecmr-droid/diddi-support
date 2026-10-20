@@ -1340,6 +1340,75 @@
         }
       }
     },
+    "/support/v1/backoffice/cases/{case_id}/handoff": {
+      "post": {
+        "tags": [
+          "backoffice-support"
+        ],
+        "summary": "Update Backoffice Handoff",
+        "operationId": "update_backoffice_handoff_support_v1_backoffice_cases__case_id__handoff_post",
+        "parameters": [
+          {
+            "name": "case_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Case Id"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HandoffRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HandoffResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/support/v1/backoffice/cases/{case_id}/attachments": {
       "post": {
         "tags": [
@@ -2107,6 +2176,15 @@
         ],
         "title": "CaseStatus"
       },
+      "ConversationMode": {
+        "type": "string",
+        "enum": [
+          "ai",
+          "human_requested",
+          "human_active"
+        ],
+        "title": "ConversationMode"
+      },
       "CreateActionRequest": {
         "properties": {
           "case_id": {
@@ -2342,6 +2420,36 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "HandoffRequest": {
+        "properties": {
+          "mode": {
+            "$ref": "#/components/schemas/ConversationMode"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mode"
+        ],
+        "title": "HandoffRequest"
+      },
+      "HandoffResponse": {
+        "properties": {
+          "case_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Case Id"
+          },
+          "mode": {
+            "$ref": "#/components/schemas/ConversationMode"
+          }
+        },
+        "type": "object",
+        "required": [
+          "case_id",
+          "mode"
+        ],
+        "title": "HandoffResponse"
       },
       "MessageAuthorType": {
         "type": "string",
