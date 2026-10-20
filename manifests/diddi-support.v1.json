@@ -72,13 +72,13 @@
         "origin_service": "diddifood",
         "resource_type": "order",
         "context_scope": "diddifood:support-context:read",
-        "status": "future"
+        "status": "implemented"
       },
       {
         "origin_service": "diddisend",
         "resource_type": "delivery",
         "context_scope": "diddisend:support-context:read",
-        "status": "future"
+        "status": "implemented"
       }
     ]
   },
