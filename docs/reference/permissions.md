@@ -19,6 +19,11 @@ Le consommateur autorisé du contexte est explicitement `diddicomms` avec le
 sujet `service:diddicomms`. Son `client_id` doit correspondre à
 `DIDDICOMMS_SERVICE_CLIENT_ID` lorsqu'il est configuré.
 
+Tout token service doit également présenter une identité cohérente :
+`token_type=service`, `role=service`, `status=active`, un sujet au format
+`service:<nom>` et un claim `service` identique à `<nom>`. L'audience, l'émetteur
+et l'expiration sont vérifiés par DiddiFreeID/JWT.
+
 Pour le Backoffice, l'agent doit présenter un JWT utilisateur actif destiné à
 `BACKOFFICE_AUDIENCE` et posséder `diddi-support:read`. Les scopes de service
 et les permissions d'agent ne sont pas interchangeables.

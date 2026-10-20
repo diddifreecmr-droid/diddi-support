@@ -12,15 +12,40 @@ from diddi_support.application.context import (
 )
 from diddi_support.core.auth import (
     BackofficePrincipal,
+    ServiceAuthenticationError,
     ServicePrincipal,
     require_support_agent,
     require_support_service,
+    validate_service_claims,
 )
 from diddi_support.infrastructure.context.http import HttpContextProvider
 from diddi_support.main import app
 from diddi_support.presentation import internal_router
 
 RIDE_ID = UUID("11111111-1111-1111-1111-111111111111")
+
+
+def test_service_identity_claims_require_consistent_service_subject() -> None:
+    claims = {
+        "token_type": "service",
+        "role": "service",
+        "status": "active",
+        "sub": "service:diddicomms",
+        "service": "diddicomms",
+    }
+    assert validate_service_claims(claims) == "service:diddicomms"
+
+
+def test_service_identity_claims_reject_subject_service_mismatch() -> None:
+    claims = {
+        "token_type": "service",
+        "role": "service",
+        "status": "active",
+        "sub": "service:diddicomms",
+        "service": "diddigo",
+    }
+    with pytest.raises(ServiceAuthenticationError, match="SERVICE_IDENTITY_INVALID"):
+        validate_service_claims(claims)
 
 
 def _transport(payload: object, status_code: int = 200) -> httpx.MockTransport:

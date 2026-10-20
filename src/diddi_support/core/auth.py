@@ -26,6 +26,26 @@ class ServiceAuthenticationError(ValueError):
     """Raised when a service token cannot be trusted."""
 
 
+def validate_service_claims(claims: dict) -> str:
+    """Validate the stable DiddiFreeID service identity claims."""
+    if (
+        claims.get("token_type") != "service"
+        or claims.get("role") != "service"
+        or claims.get("status") != "active"
+    ):
+        raise ServiceAuthenticationError("SERVICE_TOKEN_INVALID")
+    subject = claims.get("sub")
+    service = claims.get("service")
+    if (
+        not isinstance(subject, str)
+        or not subject.startswith("service:")
+        or not isinstance(service, str)
+        or service != subject.removeprefix("service:")
+    ):
+        raise ServiceAuthenticationError("SERVICE_IDENTITY_INVALID")
+    return subject
+
+
 class ServiceTokenVerifier:
     def __init__(self, *, jwks_url: str, issuer: str, audience: str) -> None:
         self.jwks_url = jwks_url
@@ -48,12 +68,11 @@ class ServiceTokenVerifier:
         except (InvalidTokenError, OSError, ValueError) as exc:
             raise ServiceAuthenticationError("SERVICE_TOKEN_INVALID") from exc
 
-        if claims.get("token_type") != "service" or claims.get("status") != "active":
-            raise ServiceAuthenticationError("SERVICE_TOKEN_INVALID")
+        subject = validate_service_claims(claims)
         if claims.get("client_id") != client_id:
             raise ServiceAuthenticationError("SERVICE_CLIENT_ID_INVALID")
         scopes = frozenset(str(claims.get("scope", "")).split())
-        return ServicePrincipal(subject=str(claims["sub"]), client_id=client_id, scopes=scopes)
+        return ServicePrincipal(subject=subject, client_id=client_id, scopes=scopes)
 
 
 def require_support_service(
