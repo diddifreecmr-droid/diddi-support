@@ -153,10 +153,24 @@
       },
       {
         "method": "POST",
+        "path": "/support/v1/backoffice/cases/{case_id}/transfer",
+        "operation": "transfer_support_case",
+        "auth": "user_jwt",
+        "required_permission": "diddi-support:assign"
+      },
+      {
+        "method": "POST",
         "path": "/support/v1/backoffice/cases/{case_id}/transition",
         "operation": "transition_support_case",
         "auth": "user_jwt",
         "required_permission": "diddi-support:write"
+      },
+      {
+        "method": "GET",
+        "path": "/support/v1/backoffice/cases/{case_id}/timeline",
+        "operation": "read_support_timeline",
+        "auth": "user_jwt",
+        "required_permission": "diddi-support:read"
       },
       {
         "method": "POST",

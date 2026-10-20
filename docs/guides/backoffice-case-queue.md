@@ -39,3 +39,8 @@ Les transitions sont contrôlées par le domaine. Une transition invalide
 retourne `409 INVALID_CASE_TRANSITION` et ne produit aucune modification.
 Chaque affectation et transition validée génère un événement d’audit et un
 événement outbox.
+
+Le transfert utilise aussi `POST /support/v1/backoffice/cases/{case_id}/transfer`
+avec la permission `diddi-support:assign`. La chronologie complète est
+consultable via `GET /support/v1/backoffice/cases/{case_id}/timeline` avec la
+permission `diddi-support:read`.

@@ -192,6 +192,14 @@ class SosResponse(BaseModel):
     updated_at: datetime
 
 
+class TimelineEvent(BaseModel):
+    type: str
+    id: UUID
+    occurred_at: datetime
+    visibility: MessageVisibility | None = None
+    summary: str
+
+
 @router.post("/cases", response_model=CaseResponse, status_code=status.HTTP_201_CREATED)
 async def create_case(
     payload: CreateCaseRequest,
@@ -357,6 +365,7 @@ async def list_backoffice_cases(
     return [_to_snapshot(case) for case in cases]
 
 
+@backoffice_router.post("/cases/{case_id}/transfer", response_model=CaseSnapshot)
 @backoffice_router.post("/cases/{case_id}/assign", response_model=CaseSnapshot)
 async def assign_backoffice_case(
     case_id: UUID,
@@ -567,6 +576,54 @@ async def list_backoffice_messages(
     else:
         messages = await PersistentSupportConversationService(session).list_messages(case_id)
     return [_to_message_response(message) for message in messages]
+
+
+@backoffice_router.get("/cases/{case_id}/timeline", response_model=list[TimelineEvent])
+async def list_backoffice_timeline(
+    case_id: UUID,
+    principal: BackofficePrincipal = Depends(require_support_agent),
+    session: AsyncSession | None = Depends(get_session_optional),
+) -> list[TimelineEvent]:
+    if "diddi-support:read" not in principal.permissions:
+        raise HTTPException(status_code=403, detail={"code": "BACKOFFICE_PERMISSION_FORBIDDEN"})
+    case = await _load_case(case_id, session)
+    if case is None:
+        raise HTTPException(status_code=404, detail={"code": "CASE_NOT_FOUND"})
+    if session is None:
+        messages = list(conversation_service.list_messages(case_id))
+        attachments = list(conversation_service.list_attachments(case_id))
+    else:
+        conversation = PersistentSupportConversationService(session)
+        messages = await conversation.list_messages(case_id)
+        attachments = await conversation.list_attachments(case_id)
+    events = [
+        TimelineEvent(
+            type="case.created",
+            id=case.id,
+            occurred_at=case.created_at,
+            summary="Support case created",
+        )
+    ]
+    events.extend(
+        TimelineEvent(
+            type="message.created",
+            id=message.id,
+            occurred_at=message.created_at,
+            visibility=MessageVisibility(message.visibility),
+            summary="Support message",
+        )
+        for message in messages
+    )
+    events.extend(
+        TimelineEvent(
+            type="attachment.referenced",
+            id=attachment.id,
+            occurred_at=attachment.created_at,
+            summary="Evidence attachment referenced",
+        )
+        for attachment in attachments
+    )
+    return sorted(events, key=lambda event: event.occurred_at)
 
 
 @backoffice_router.post("/cases/{case_id}/attachments", response_model=AttachmentResponse)
