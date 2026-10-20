@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, s
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from diddi_support.application.actions import ActionService, PersistentActionService
 from diddi_support.application.cases import PersistentSupportCaseService
 from diddi_support.application.context import (
     BusinessContext,
@@ -28,6 +29,7 @@ from diddi_support.core.auth import (
 )
 from diddi_support.core.config import settings
 from diddi_support.core.database import get_session_optional
+from diddi_support.domain.actions import ActionStatus, ActionType, SupportAction
 from diddi_support.domain.cases import (
     CasePriority,
     CaseStatus,
@@ -60,6 +62,7 @@ case_service = SupportCaseService(repository)
 context_service = ContextService(providers_from_settings())
 conversation_service = SupportConversationService()
 sos_service = SosService()
+action_service = ActionService()
 diddifiles_client = client_from_settings()
 CREATE_CASE_SCOPE = "diddi-support:cases:create"
 READ_CONTEXT_SCOPE = "diddi-support:cases:read"
@@ -200,6 +203,35 @@ class TimelineEvent(BaseModel):
     summary: str
 
 
+class CreateActionRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    case_id: UUID
+    action_type: ActionType
+    operation_key: str = Field(min_length=8, max_length=160)
+
+
+class ActionResultRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    status: ActionStatus
+    provider_reference: str | None = Field(default=None, max_length=160)
+    result_code: str | None = Field(default=None, max_length=120)
+
+
+class ActionResponse(BaseModel):
+    id: UUID
+    case_id: UUID
+    operation_key: str
+    action_type: ActionType
+    requested_by: str
+    status: ActionStatus
+    provider_reference: str | None
+    result_code: str | None
+    created_at: datetime
+    updated_at: datetime
+
+
 @router.post("/cases", response_model=CaseResponse, status_code=status.HTTP_201_CREATED)
 async def create_case(
     payload: CreateCaseRequest,
@@ -326,6 +358,47 @@ async def create_sos_alert(
     return _to_sos_response(alert)
 
 
+@router.post("/actions/{action_id}/result", response_model=ActionResponse)
+async def record_action_result(
+    action_id: UUID,
+    payload: ActionResultRequest,
+    request: Request,
+    principal: ServicePrincipal = Depends(require_support_service),
+    session: AsyncSession | None = Depends(get_session_optional),
+) -> ActionResponse:
+    if "diddi-support:actions:write" not in principal.scopes:
+        raise HTTPException(status_code=403, detail={"code": "SERVICE_SCOPE_FORBIDDEN"})
+    if session is None:
+        action = action_service.get(action_id)
+    else:
+        action = await PersistentActionService(session).get(action_id)
+    if action is None:
+        raise HTTPException(status_code=404, detail={"code": "ACTION_NOT_FOUND"})
+    expected_service = (
+        "service:diddipay"
+        if action.action_type == ActionType.DIDDIPAY_REFUND
+        else "service:diddigo"
+    )
+    if principal.subject != expected_service:
+        raise HTTPException(status_code=403, detail={"code": "ACTION_OWNER_FORBIDDEN"})
+    if payload.status == ActionStatus.SUCCEEDED:
+        if not payload.provider_reference:
+            raise HTTPException(status_code=400, detail={"code": "PROVIDER_REFERENCE_REQUIRED"})
+        action.confirm(provider_reference=payload.provider_reference)
+    elif payload.status == ActionStatus.FAILED:
+        action.fail(result_code=payload.result_code or "PROVIDER_FAILED")
+    elif payload.status == ActionStatus.UNKNOWN:
+        action.fail(result_code=payload.result_code or "PROVIDER_TIMEOUT", unknown=True)
+    else:
+        action.mark_pending()
+    if session is not None:
+        action = await PersistentActionService(session).save(
+            action,
+            request_id=request.headers.get("X-Request-ID"),
+        )
+    return _to_action_response(action)
+
+
 @router.get("/cases/{case_id}/context", response_model=CaseContextResponse)
 async def get_case_context(
     case_id: UUID,
@@ -443,6 +516,65 @@ async def list_backoffice_sos(
     else:
         alerts = await PersistentSosService(session).queue(limit=limit)
     return [_to_sos_response(alert) for alert in alerts]
+
+
+@backoffice_router.post(
+    "/actions",
+    response_model=ActionResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def request_backoffice_action(
+    payload: CreateActionRequest,
+    request: Request,
+    principal: BackofficePrincipal = Depends(require_support_agent),
+    session: AsyncSession | None = Depends(get_session_optional),
+) -> ActionResponse:
+    if "diddi-support:write" not in principal.permissions:
+        raise HTTPException(status_code=403, detail={"code": "BACKOFFICE_PERMISSION_FORBIDDEN"})
+    if await _load_case(payload.case_id, session) is None:
+        raise HTTPException(status_code=404, detail={"code": "CASE_NOT_FOUND"})
+    if session is None:
+        action, _ = action_service.request(
+            SupportAction(
+                case_id=payload.case_id,
+                operation_key=payload.operation_key,
+                action_type=payload.action_type,
+                requested_by=principal.subject,
+            )
+        )
+    else:
+        persistent = PersistentActionService(session)
+        action = await persistent.get_by_operation_key(payload.operation_key)
+        if action is None:
+            action = SupportAction(
+                case_id=payload.case_id,
+                operation_key=payload.operation_key,
+                action_type=payload.action_type,
+                requested_by=principal.subject,
+            )
+            action.mark_pending()
+            action = await persistent.add(
+                action,
+                request_id=request.headers.get("X-Request-ID"),
+            )
+    return _to_action_response(action)
+
+
+@backoffice_router.get("/actions/{action_id}", response_model=ActionResponse)
+async def get_backoffice_action(
+    action_id: UUID,
+    session: AsyncSession | None = Depends(get_session_optional),
+    principal: BackofficePrincipal = Depends(require_support_agent),
+) -> ActionResponse:
+    if "diddi-support:read" not in principal.permissions:
+        raise HTTPException(status_code=403, detail={"code": "BACKOFFICE_PERMISSION_FORBIDDEN"})
+    if session is None:
+        action = action_service.get(action_id)
+    else:
+        action = await PersistentActionService(session).get(action_id)
+    if action is None:
+        raise HTTPException(status_code=404, detail={"code": "ACTION_NOT_FOUND"})
+    return _to_action_response(action)
 
 
 @backoffice_router.post("/sos/{alert_id}/confirm", response_model=SosResponse)
@@ -786,6 +918,21 @@ def _to_sos_response(alert: SosAlert) -> SosResponse:
         escalation_level=alert.escalation_level,
         created_at=alert.created_at,
         updated_at=alert.updated_at,
+    )
+
+
+def _to_action_response(action: SupportAction) -> ActionResponse:
+    return ActionResponse(
+        id=action.id,
+        case_id=action.case_id,
+        operation_key=action.operation_key,
+        action_type=action.action_type,
+        requested_by=action.requested_by,
+        status=action.status,
+        provider_reference=action.provider_reference,
+        result_code=action.result_code,
+        created_at=action.created_at,
+        updated_at=action.updated_at,
     )
 
 

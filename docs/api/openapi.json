@@ -264,6 +264,91 @@
         }
       }
     },
+    "/support/v1/internal/actions/{action_id}/result": {
+      "post": {
+        "tags": [
+          "internal-support"
+        ],
+        "summary": "Record Action Result",
+        "operationId": "record_action_result_support_v1_internal_actions__action_id__result_post",
+        "parameters": [
+          {
+            "name": "action_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Action Id"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Client-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Client-Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActionResultRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/support/v1/internal/cases/{case_id}/context": {
       "get": {
         "tags": [
@@ -691,6 +776,124 @@
                     "$ref": "#/components/schemas/SosResponse"
                   },
                   "title": "Response List Backoffice Sos Support V1 Backoffice Sos Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/support/v1/backoffice/actions": {
+      "post": {
+        "tags": [
+          "backoffice-support"
+        ],
+        "summary": "Request Backoffice Action",
+        "operationId": "request_backoffice_action_support_v1_backoffice_actions_post",
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateActionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/support/v1/backoffice/actions/{action_id}": {
+      "get": {
+        "tags": [
+          "backoffice-support"
+        ],
+        "summary": "Get Backoffice Action",
+        "operationId": "get_backoffice_action_support_v1_backoffice_actions__action_id__get",
+        "parameters": [
+          {
+            "name": "action_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Action Id"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResponse"
                 }
               }
             }
@@ -1467,6 +1670,136 @@
   },
   "components": {
     "schemas": {
+      "ActionResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "case_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Case Id"
+          },
+          "operation_key": {
+            "type": "string",
+            "title": "Operation Key"
+          },
+          "action_type": {
+            "$ref": "#/components/schemas/ActionType"
+          },
+          "requested_by": {
+            "type": "string",
+            "title": "Requested By"
+          },
+          "status": {
+            "$ref": "#/components/schemas/ActionStatus"
+          },
+          "provider_reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Reference"
+          },
+          "result_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Code"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "case_id",
+          "operation_key",
+          "action_type",
+          "requested_by",
+          "status",
+          "provider_reference",
+          "result_code",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ActionResponse"
+      },
+      "ActionResultRequest": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/ActionStatus"
+          },
+          "provider_reference": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 160
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Reference"
+          },
+          "result_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 120
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Code"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "ActionResultRequest"
+      },
+      "ActionStatus": {
+        "type": "string",
+        "enum": [
+          "requested",
+          "pending",
+          "succeeded",
+          "failed",
+          "unknown"
+        ],
+        "title": "ActionStatus"
+      },
+      "ActionType": {
+        "type": "string",
+        "enum": [
+          "diddigo.cancel",
+          "diddipay.refund"
+        ],
+        "title": "ActionType"
+      },
       "AssignCaseRequest": {
         "properties": {
           "agent_id": {
@@ -1773,6 +2106,32 @@
           "closed"
         ],
         "title": "CaseStatus"
+      },
+      "CreateActionRequest": {
+        "properties": {
+          "case_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Case Id"
+          },
+          "action_type": {
+            "$ref": "#/components/schemas/ActionType"
+          },
+          "operation_key": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 8,
+            "title": "Operation Key"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "case_id",
+          "action_type",
+          "operation_key"
+        ],
+        "title": "CreateActionRequest"
       },
       "CreateAttachmentRequest": {
         "properties": {

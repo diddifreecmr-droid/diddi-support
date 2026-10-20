@@ -115,3 +115,18 @@ class SosAlertModel(Base):
     escalation_level: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SupportActionModel(Base):
+    __tablename__ = "support_actions"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
+    case_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True))
+    operation_key: Mapped[str] = mapped_column(String(160), unique=True)
+    action_type: Mapped[str] = mapped_column(String(80))
+    requested_by: Mapped[str] = mapped_column(String(160))
+    status: Mapped[str] = mapped_column(String(20))
+    provider_reference: Mapped[str | None] = mapped_column(String(160))
+    result_code: Mapped[str | None] = mapped_column(String(120))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

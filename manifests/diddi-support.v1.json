@@ -127,6 +127,13 @@
         "operation": "read_case_with_business_context",
         "auth": "service_jwt",
         "required_scope": "diddi-support:cases:read"
+      },
+      {
+        "method": "POST",
+        "path": "/support/v1/internal/actions/{action_id}/result",
+        "operation": "record_business_action_result",
+        "auth": "service_jwt",
+        "required_scope": "diddi-support:actions:write"
       }
     ],
     "backoffice_routes": [
@@ -169,6 +176,20 @@
         "method": "GET",
         "path": "/support/v1/backoffice/cases/{case_id}/timeline",
         "operation": "read_support_timeline",
+        "auth": "user_jwt",
+        "required_permission": "diddi-support:read"
+      },
+      {
+        "method": "POST",
+        "path": "/support/v1/backoffice/actions",
+        "operation": "request_business_action",
+        "auth": "user_jwt",
+        "required_permission": "diddi-support:write"
+      },
+      {
+        "method": "GET",
+        "path": "/support/v1/backoffice/actions/{action_id}",
+        "operation": "read_business_action",
         "auth": "user_jwt",
         "required_permission": "diddi-support:read"
       },
@@ -302,7 +323,6 @@
       "diddi-support:assign",
       "diddi-support:sos-operate",
       "diddi-support:attachments-read",
-      "diddi-support:sos-operate",
       "diddi-support:audit-read"
     ]
   },

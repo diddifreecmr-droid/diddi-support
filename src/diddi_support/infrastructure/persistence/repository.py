@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from diddi_support.domain.actions import ActionStatus, ActionType, SupportAction
 from diddi_support.domain.cases import (
     CasePriority,
     CaseStatus,
@@ -28,6 +29,7 @@ from diddi_support.domain.sos import (
 )
 from diddi_support.infrastructure.persistence.models import (
     SosAlertModel,
+    SupportActionModel,
     SupportAttachmentModel,
     SupportAuditEventModel,
     SupportCaseModel,
@@ -400,6 +402,116 @@ class PostgresSupportCaseRepository:
         await self.session.commit()
         return alert
 
+    async def add_action(
+        self,
+        action: SupportAction,
+        *,
+        request_id: str | None = None,
+    ) -> SupportAction:
+        self.session.add(
+            SupportActionModel(
+                id=action.id,
+                case_id=action.case_id,
+                operation_key=action.operation_key,
+                action_type=action.action_type.value,
+                requested_by=action.requested_by,
+                status=action.status.value,
+                provider_reference=action.provider_reference,
+                result_code=action.result_code,
+                created_at=action.created_at,
+                updated_at=action.updated_at,
+            )
+        )
+        self.session.add(
+            SupportAuditEventModel(
+                id=uuid4(),
+                action="support.action.requested",
+                target_type="support_action",
+                target_id=str(action.id),
+                outcome="succeeded",
+                actor_id=None,
+                request_id=request_id,
+                metadata_json={"requested_by": action.requested_by},
+                occurred_at=datetime.now(UTC),
+            )
+        )
+        self.session.add(
+            SupportOutboxEventModel(
+                id=uuid4(),
+                event_type="support.action.requested",
+                aggregate_type="support_action",
+                aggregate_id=str(action.id),
+                payload={
+                    "action_type": action.action_type.value,
+                    "operation_key": action.operation_key,
+                },
+                correlation_id=request_id,
+                created_at=datetime.now(UTC),
+            )
+        )
+        await self.session.commit()
+        return action
+
+    async def get_action(self, action_id: UUID) -> SupportAction | None:
+        model = await self.session.get(SupportActionModel, action_id)
+        return _action_to_domain(model) if model is not None else None
+
+    async def get_action_by_operation_key(self, operation_key: str) -> SupportAction | None:
+        model = await self.session.scalar(
+            select(SupportActionModel).where(
+                SupportActionModel.operation_key == operation_key
+            )
+        )
+        return _action_to_domain(model) if model is not None else None
+
+    async def save_action(
+        self,
+        action: SupportAction,
+        *,
+        request_id: str | None = None,
+    ) -> SupportAction:
+        model = await self.session.get(SupportActionModel, action.id)
+        if model is None:
+            return action
+        model.status = action.status.value
+        model.provider_reference = action.provider_reference
+        model.result_code = action.result_code
+        model.updated_at = action.updated_at
+        event_type = "support.action.completed" if action.status in {
+            ActionStatus.SUCCEEDED,
+            ActionStatus.FAILED,
+        } else "support.action.updated"
+        self.session.add(
+            SupportAuditEventModel(
+                id=uuid4(),
+                action=event_type,
+                target_type="support_action",
+                target_id=str(action.id),
+                outcome="succeeded",
+                actor_id=None,
+                request_id=request_id,
+                metadata_json={"status": action.status.value},
+                occurred_at=datetime.now(UTC),
+            )
+        )
+        self.session.add(
+            SupportOutboxEventModel(
+                id=uuid4(),
+                event_type=event_type,
+                aggregate_type="support_action",
+                aggregate_id=str(action.id),
+                payload={
+                    "status": action.status.value,
+                    "provider_reference": action.provider_reference,
+                    "result_code": action.result_code,
+                },
+                correlation_id=request_id,
+                created_at=datetime.now(UTC),
+            )
+        )
+        await self.session.commit()
+        return action
+
     async def create_or_get(
         self,
         case: SupportCase,
@@ -533,6 +645,21 @@ def _sos_to_domain(model: SosAlertModel) -> SosAlert:
         handling_status=SosHandlingStatus(model.handling_status),
         notification_attempts=model.notification_attempts,
         escalation_level=model.escalation_level,
+        created_at=model.created_at,
+        updated_at=model.updated_at,
+    )
+
+
+def _action_to_domain(model: SupportActionModel) -> SupportAction:
+    return SupportAction(
+        id=model.id,
+        case_id=model.case_id,
+        operation_key=model.operation_key,
+        action_type=ActionType(model.action_type),
+        requested_by=model.requested_by,
+        status=ActionStatus(model.status),
+        provider_reference=model.provider_reference,
+        result_code=model.result_code,
         created_at=model.created_at,
         updated_at=model.updated_at,
     )
