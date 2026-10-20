@@ -15,10 +15,18 @@ from diddi_support.domain.cases import (
     SupportCase,
     _fingerprint,
 )
+from diddi_support.domain.messages import (
+    AttachmentPurpose,
+    MessageAuthorType,
+    SupportAttachment,
+    SupportMessage,
+)
 from diddi_support.infrastructure.persistence.models import (
+    SupportAttachmentModel,
     SupportAuditEventModel,
     SupportCaseModel,
     SupportCaseOperationModel,
+    SupportMessageModel,
     SupportOutboxEventModel,
 )
 
@@ -118,6 +126,144 @@ class PostgresSupportCaseRepository:
             )
         )
         await self.session.commit()
+
+    async def add_message(
+        self,
+        message: SupportMessage,
+        *,
+        actor_id: str | None = None,
+        request_id: str | None = None,
+    ) -> SupportMessage:
+        self.session.add(
+            SupportMessageModel(
+                id=message.id,
+                case_id=message.case_id,
+                author_type=message.author_type.value,
+                author_id=message.author_id,
+                body=message.body,
+                visibility=message.visibility,
+                created_at=message.created_at,
+            )
+        )
+        self.session.add(
+            SupportAuditEventModel(
+                id=uuid4(),
+                action="support.message.created",
+                target_type="support_case_message",
+                target_id=str(message.id),
+                outcome="succeeded",
+                actor_id=None,
+                request_id=request_id,
+                metadata_json={
+                    "actor_id": actor_id,
+                    "case_id": str(message.case_id),
+                    "visibility": message.visibility,
+                },
+                occurred_at=datetime.now(UTC),
+            )
+        )
+        self.session.add(
+            SupportOutboxEventModel(
+                id=uuid4(),
+                event_type="support.case.message.created",
+                aggregate_type="support_case",
+                aggregate_id=str(message.case_id),
+                payload={
+                    "message_id": str(message.id),
+                    "visibility": message.visibility,
+                },
+                correlation_id=request_id,
+                created_at=datetime.now(UTC),
+            )
+        )
+        await self.session.commit()
+        return message
+
+    async def list_messages(self, case_id: UUID) -> list[SupportMessage]:
+        result = await self.session.execute(
+            select(SupportMessageModel)
+            .where(SupportMessageModel.case_id == case_id)
+            .order_by(SupportMessageModel.created_at)
+        )
+        return [
+            SupportMessage(
+                id=model.id,
+                case_id=model.case_id,
+                author_type=MessageAuthorType(model.author_type),
+                author_id=model.author_id,
+                body=model.body,
+                visibility=model.visibility,
+                created_at=model.created_at,
+            )
+            for model in result.scalars().all()
+        ]
+
+    async def add_attachment(
+        self,
+        attachment: SupportAttachment,
+        *,
+        actor_id: str | None = None,
+        request_id: str | None = None,
+    ) -> SupportAttachment:
+        self.session.add(
+            SupportAttachmentModel(
+                id=attachment.id,
+                case_id=attachment.case_id,
+                file_id=attachment.file_id,
+                owner_user_id=attachment.owner_user_id,
+                purpose=attachment.purpose.value,
+                mime_type=attachment.mime_type,
+                size_bytes=attachment.size_bytes,
+                created_at=attachment.created_at,
+            )
+        )
+        self.session.add(
+            SupportAuditEventModel(
+                id=uuid4(),
+                action="support.attachment.referenced",
+                target_type="support_case_attachment",
+                target_id=str(attachment.id),
+                outcome="succeeded",
+                actor_id=None,
+                request_id=request_id,
+                metadata_json={
+                    "actor_id": actor_id,
+                    "case_id": str(attachment.case_id),
+                    "file_id": str(attachment.file_id),
+                    "purpose": attachment.purpose.value,
+                },
+                occurred_at=datetime.now(UTC),
+            )
+        )
+        self.session.add(
+            SupportOutboxEventModel(
+                id=uuid4(),
+                event_type="support.case.attachment.referenced",
+                aggregate_type="support_case",
+                aggregate_id=str(attachment.case_id),
+                payload={
+                    "attachment_id": str(attachment.id),
+                    "file_id": str(attachment.file_id),
+                    "purpose": attachment.purpose.value,
+                },
+                correlation_id=request_id,
+                created_at=datetime.now(UTC),
+            )
+        )
+        await self.session.commit()
+        return attachment
+
+    async def list_attachments(self, case_id: UUID) -> list[SupportAttachment]:
+        result = await self.session.execute(
+            select(SupportAttachmentModel)
+            .where(SupportAttachmentModel.case_id == case_id)
+            .order_by(SupportAttachmentModel.created_at)
+        )
+        return [_attachment_to_domain(model) for model in result.scalars().all()]
+
+    async def get_attachment(self, attachment_id: UUID) -> SupportAttachment | None:
+        model = await self.session.get(SupportAttachmentModel, attachment_id)
+        return _attachment_to_domain(model) if model is not None else None
 
     async def create_or_get(
         self,
@@ -222,4 +368,17 @@ def _to_domain(model: SupportCaseModel) -> SupportCase:
         created_at=model.created_at,
         updated_at=model.updated_at,
         resolved_at=model.resolved_at,
+    )
+
+
+def _attachment_to_domain(model: SupportAttachmentModel) -> SupportAttachment:
+    return SupportAttachment(
+        id=model.id,
+        case_id=model.case_id,
+        file_id=model.file_id,
+        owner_user_id=model.owner_user_id,
+        purpose=AttachmentPurpose(model.purpose),
+        mime_type=model.mime_type,
+        size_bytes=model.size_bytes,
+        created_at=model.created_at,
     )

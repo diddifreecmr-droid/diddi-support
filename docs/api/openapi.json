@@ -499,6 +499,335 @@
         }
       }
     },
+    "/support/v1/backoffice/cases/{case_id}/messages": {
+      "post": {
+        "tags": [
+          "backoffice-support"
+        ],
+        "summary": "Add Backoffice Message",
+        "operationId": "add_backoffice_message_support_v1_backoffice_cases__case_id__messages_post",
+        "parameters": [
+          {
+            "name": "case_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Case Id"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMessageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "backoffice-support"
+        ],
+        "summary": "List Backoffice Messages",
+        "operationId": "list_backoffice_messages_support_v1_backoffice_cases__case_id__messages_get",
+        "parameters": [
+          {
+            "name": "case_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Case Id"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/MessageResponse"
+                  },
+                  "title": "Response List Backoffice Messages Support V1 Backoffice Cases  Case Id  Messages Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/support/v1/backoffice/cases/{case_id}/attachments": {
+      "post": {
+        "tags": [
+          "backoffice-support"
+        ],
+        "summary": "Add Backoffice Attachment",
+        "operationId": "add_backoffice_attachment_support_v1_backoffice_cases__case_id__attachments_post",
+        "parameters": [
+          {
+            "name": "case_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Case Id"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAttachmentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttachmentResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "backoffice-support"
+        ],
+        "summary": "List Backoffice Attachments",
+        "operationId": "list_backoffice_attachments_support_v1_backoffice_cases__case_id__attachments_get",
+        "parameters": [
+          {
+            "name": "case_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Case Id"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AttachmentResponse"
+                  },
+                  "title": "Response List Backoffice Attachments Support V1 Backoffice Cases  Case Id  Attachments Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/support/v1/backoffice/cases/{case_id}/attachments/{attachment_id}/temporary-access": {
+      "post": {
+        "tags": [
+          "backoffice-support"
+        ],
+        "summary": "Get Attachment Temporary Access",
+        "operationId": "get_attachment_temporary_access_support_v1_backoffice_cases__case_id__attachments__attachment_id__temporary_access_post",
+        "parameters": [
+          {
+            "name": "case_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Case Id"
+            }
+          },
+          {
+            "name": "attachment_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Attachment Id"
+            }
+          },
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemporaryFileAccess"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/support/v1/backoffice/cases/{case_id}/context": {
       "get": {
         "tags": [
@@ -644,6 +973,67 @@
           "agent_id"
         ],
         "title": "AssignCaseRequest"
+      },
+      "AttachmentPurpose": {
+        "type": "string",
+        "enum": [
+          "diddisupport_case_photo",
+          "diddisupport_case_voice",
+          "diddisupport_case_document"
+        ],
+        "title": "AttachmentPurpose"
+      },
+      "AttachmentResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "case_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Case Id"
+          },
+          "file_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "File Id"
+          },
+          "owner_user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Owner User Id"
+          },
+          "purpose": {
+            "$ref": "#/components/schemas/AttachmentPurpose"
+          },
+          "mime_type": {
+            "type": "string",
+            "title": "Mime Type"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "title": "Size Bytes"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "case_id",
+          "file_id",
+          "owner_user_id",
+          "purpose",
+          "mime_type",
+          "size_bytes",
+          "created_at"
+        ],
+        "title": "AttachmentResponse"
       },
       "BusinessContext": {
         "properties": {
@@ -876,6 +1266,44 @@
         ],
         "title": "CaseStatus"
       },
+      "CreateAttachmentRequest": {
+        "properties": {
+          "file_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "File Id"
+          },
+          "owner_user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Owner User Id"
+          },
+          "purpose": {
+            "$ref": "#/components/schemas/AttachmentPurpose"
+          },
+          "mime_type": {
+            "type": "string",
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Mime Type"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "exclusiveMinimum": 0.0,
+            "title": "Size Bytes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "file_id",
+          "owner_user_id",
+          "purpose",
+          "mime_type",
+          "size_bytes"
+        ],
+        "title": "CreateAttachmentRequest"
+      },
       "CreateCaseRequest": {
         "properties": {
           "origin_service": {
@@ -939,6 +1367,26 @@
         ],
         "title": "CreateCaseRequest"
       },
+      "CreateMessageRequest": {
+        "properties": {
+          "body": {
+            "type": "string",
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Body"
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/MessageVisibility"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "body",
+          "visibility"
+        ],
+        "title": "CreateMessageRequest"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -951,6 +1399,91 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "MessageAuthorType": {
+        "type": "string",
+        "enum": [
+          "user",
+          "agent",
+          "system"
+        ],
+        "title": "MessageAuthorType"
+      },
+      "MessageResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "case_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Case Id"
+          },
+          "author_type": {
+            "$ref": "#/components/schemas/MessageAuthorType"
+          },
+          "author_id": {
+            "type": "string",
+            "title": "Author Id"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/MessageVisibility"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "case_id",
+          "author_type",
+          "author_id",
+          "body",
+          "visibility",
+          "created_at"
+        ],
+        "title": "MessageResponse"
+      },
+      "MessageVisibility": {
+        "type": "string",
+        "enum": [
+          "user_visible",
+          "internal_note",
+          "system_event"
+        ],
+        "title": "MessageVisibility"
+      },
+      "TemporaryFileAccess": {
+        "properties": {
+          "temporary_url": {
+            "type": "string",
+            "maxLength": 2083,
+            "minLength": 1,
+            "format": "uri",
+            "title": "Temporary Url"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "temporary_url",
+          "expires_at"
+        ],
+        "title": "TemporaryFileAccess"
       },
       "TransitionCaseRequest": {
         "properties": {

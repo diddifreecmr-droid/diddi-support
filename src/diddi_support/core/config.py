@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     context_request_timeout_seconds: float = Field(default=3.0, gt=0, le=30)
     context_auth_token: str = ""
     context_client_id: str = ""
+    diddifiles_base_url: str = ""
+    diddifiles_auth_token: str = ""
+    diddifiles_client_id: str = ""
+    attachment_max_bytes: int = Field(default=10_485_760, ge=1, le=104_857_600)
 
 
 @lru_cache

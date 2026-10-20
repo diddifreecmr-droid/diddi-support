@@ -157,6 +157,41 @@
         "operation": "transition_support_case",
         "auth": "user_jwt",
         "required_permission": "diddi-support:write"
+      },
+      {
+        "method": "POST",
+        "path": "/support/v1/backoffice/cases/{case_id}/messages",
+        "operation": "create_support_message",
+        "auth": "user_jwt",
+        "required_permission": "diddi-support:reply|diddi-support:write"
+      },
+      {
+        "method": "GET",
+        "path": "/support/v1/backoffice/cases/{case_id}/messages",
+        "operation": "list_support_messages",
+        "auth": "user_jwt",
+        "required_permission": "diddi-support:read"
+      },
+      {
+        "method": "POST",
+        "path": "/support/v1/backoffice/cases/{case_id}/attachments",
+        "operation": "reference_support_attachment",
+        "auth": "user_jwt",
+        "required_permission": "diddi-support:reply"
+      },
+      {
+        "method": "GET",
+        "path": "/support/v1/backoffice/cases/{case_id}/attachments",
+        "operation": "list_support_attachments",
+        "auth": "user_jwt",
+        "required_permission": "diddi-support:attachments-read"
+      },
+      {
+        "method": "POST",
+        "path": "/support/v1/backoffice/cases/{case_id}/attachments/{attachment_id}/temporary-access",
+        "operation": "create_temporary_attachment_access",
+        "auth": "user_jwt",
+        "required_permission": "diddi-support:attachments-read"
       }
     ],
     "context_routes_expected_from_owner": [

@@ -71,3 +71,28 @@ class SupportOutboxEventModel(Base):
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     attempts: Mapped[int] = mapped_column(Integer, default=0)
     next_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class SupportMessageModel(Base):
+    __tablename__ = "support_case_messages"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
+    case_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True))
+    author_type: Mapped[str] = mapped_column(String(20))
+    author_id: Mapped[str] = mapped_column(String(160))
+    body: Mapped[str] = mapped_column(String(10_000))
+    visibility: Mapped[str] = mapped_column(String(32))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class SupportAttachmentModel(Base):
+    __tablename__ = "support_case_attachments"
+
+    id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
+    case_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True))
+    file_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True))
+    owner_user_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True))
+    purpose: Mapped[str] = mapped_column(String(80))
+    mime_type: Mapped[str] = mapped_column(String(120))
+    size_bytes: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
