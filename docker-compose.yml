@@ -3,8 +3,8 @@ services:
     build: .
     command: ["python", "-m", "diddi_support.ops.migrate"]
     environment:
-      DATABASE_URL: postgresql+asyncpg://diddi_support:diddi_support@postgres:5432/diddi_support
-      MIGRATIONS_PATH: /app/migrations
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://diddi_support:diddi_support@postgres:5432/diddi_support}
+      MIGRATIONS_PATH: ${MIGRATIONS_PATH:-/app/migrations}
       MIGRATION_MAX_ATTEMPTS: ${MIGRATION_MAX_ATTEMPTS:-30}
       MIGRATION_RETRY_SECONDS: ${MIGRATION_RETRY_SECONDS:-2}
     env_file:
@@ -19,8 +19,8 @@ services:
     ports:
       - "8050:8050"
     environment:
-      DATABASE_URL: postgresql+asyncpg://diddi_support:diddi_support@postgres:5432/diddi_support
-      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://diddi_support:diddi_support@postgres:5432/diddi_support}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       OUTBOX_STREAM_NAME: ${OUTBOX_STREAM_NAME:-diddisupport.events}
       OUTBOX_STREAM_MAXLEN: ${OUTBOX_STREAM_MAXLEN:-100000}
       OUTBOX_BATCH_SIZE: ${OUTBOX_BATCH_SIZE:-50}
@@ -73,8 +73,8 @@ services:
     ports:
       - "9105:9105"
     environment:
-      DATABASE_URL: postgresql+asyncpg://diddi_support:diddi_support@postgres:5432/diddi_support
-      REDIS_URL: redis://redis:6379/0
+      DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://diddi_support:diddi_support@postgres:5432/diddi_support}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       OUTBOX_STREAM_NAME: ${OUTBOX_STREAM_NAME:-diddisupport.events}
       OUTBOX_STREAM_MAXLEN: ${OUTBOX_STREAM_MAXLEN:-100000}
       OUTBOX_BATCH_SIZE: ${OUTBOX_BATCH_SIZE:-50}
