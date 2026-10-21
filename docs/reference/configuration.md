@@ -75,3 +75,19 @@ Les variables `IDENTITY_JWKS_URL`, `IDENTITY_ISSUER`, `SERVICE_AUDIENCE` et
 `BACKOFFICE_AUDIENCE` contrôlent les identités. Les connecteurs et seuils
 métier sont injectés au déploiement ; une modification nécessite un
 redeploiement.
+
+## Migrations PostgreSQL
+
+Le service `support-migrate` applique les fichiers SQL dans `migrations/` dans
+leur ordre numérique et enregistre les fichiers déjà exécutés dans
+`support_schema_migrations`. Il est idempotent et doit terminer avec le code 0
+avant le démarrage de l'API et du worker outbox.
+
+- `MIGRATIONS_PATH` : chemin des migrations dans le conteneur, `/app/migrations`
+  par défaut dans Docker.
+- `MIGRATION_MAX_ATTEMPTS` : nombre de tentatives de connexion PostgreSQL.
+- `MIGRATION_RETRY_SECONDS` : délai entre deux tentatives de connexion.
+
+Dans Portainer, le service `support-migrate` doit apparaître comme `Exited (0)`
+après un déploiement réussi. Un échec doit être corrigé avant de relancer
+l'API ou le worker.

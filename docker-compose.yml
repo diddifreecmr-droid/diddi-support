@@ -1,4 +1,19 @@
 services:
+  support-migrate:
+    build: .
+    command: ["python", "-m", "diddi_support.ops.migrate"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://diddi_support:diddi_support@postgres:5432/diddi_support
+      MIGRATIONS_PATH: /app/migrations
+      MIGRATION_MAX_ATTEMPTS: ${MIGRATION_MAX_ATTEMPTS:-30}
+      MIGRATION_RETRY_SECONDS: ${MIGRATION_RETRY_SECONDS:-2}
+    env_file:
+      - path: .env
+        required: false
+    depends_on:
+      postgres:
+        condition: service_started
+
   support:
     build: .
     ports:
@@ -47,8 +62,10 @@ services:
       - path: .env
         required: false
     depends_on:
-      - postgres
-      - redis
+      support-migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
 
   support-outbox-worker:
     build: .
@@ -71,8 +88,10 @@ services:
       - path: .env
         required: false
     depends_on:
-      - postgres
-      - redis
+      support-migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
 
   postgres:
     image: postgres:16-alpine
