@@ -62,9 +62,34 @@ def test_internal_note_is_not_a_user_notification_payload() -> None:
 
 
 def test_legacy_event_names_are_mapped_to_versioned_contract() -> None:
+    assert versioned_event_type("support.case.created") == "support.case.created.v1"
     assert versioned_event_type("support.case.updated") == "support.case.updated.v1"
     assert versioned_event_type("support.case.assigned") == "support.case.assigned.v1"
+    assert versioned_event_type("support.case.resolved") == "support.case.resolved.v1"
     assert versioned_event_type("support.case.status_changed") == "support.case.updated.v1"
+
+
+def test_general_case_event_does_not_emit_null_business_reference() -> None:
+    event = OutboxRecord(
+        id=EVENT_ID,
+        event_type=SupportEventType.CASE_CREATED.value,
+        aggregate_id=str(CASE_ID),
+        aggregate_version=1,
+        payload={
+            "case_id": str(CASE_ID),
+            "origin_service": None,
+            "resource_type": None,
+            "resource_id": None,
+            "priority": "normal",
+        },
+        occurred_at=datetime(2026, 10, 21, tzinfo=UTC),
+        attempts=1,
+    )
+
+    assert event_envelope(event)["payload"] == {
+        "case_id": str(CASE_ID),
+        "priority": "normal",
+    }
 
 
 @pytest.mark.asyncio

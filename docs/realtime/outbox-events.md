@@ -33,8 +33,8 @@ données métier sensibles ne sont jamais publiés.
 - `support.case.resolved.v1`
 
 Une réponse agent `user_visible` produit un événement de message. Une note
-`internal_note` ne produit pas de notification utilisateur. Une version plus
-ancienne doit être ignorée par DiddiComms.
+`internal_note` n'entre pas dans l'outbox et ne produit pas de notification
+utilisateur. Une version plus ancienne doit être ignorée par DiddiComms.
 
 ## Garantie et rejeu
 
