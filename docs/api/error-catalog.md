@@ -21,3 +21,5 @@
 | `CONTEXT_PROVIDER_INVALID_RESPONSE` | La réponse du propriétaire ne respecte pas `diddi.context.v1` |
 | `CONTEXT_RESOURCE_MISMATCH` | La réponse ne correspond pas à la ressource demandée |
 | `CONTEXT_AUTHENTICATION_FAILED` | Le token service DiddiFreeID n'a pas pu être obtenu |
+| `SUPPORT_RESOURCE_REFERENCE_INCOMPLETE` | Une référence métier contient seulement une partie des trois champs requis |
+| `CASE_NOT_MODIFIABLE` | Le dossier résolu ou fermé n'accepte plus de nouveau message |

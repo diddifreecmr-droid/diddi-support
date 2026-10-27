@@ -28,7 +28,8 @@ X-Request-ID: <request-id>
 Idempotency-Key: <stable-key>
 ```
 
-Le corps contient la référence métier et l'utilisateur concerné :
+Le corps contient la référence métier et l'utilisateur concerné pour un dossier
+contextuel :
 
 ```json
 {
@@ -48,6 +49,24 @@ DiddiSupport audite séparément `service:diddicomms` comme créateur technique
 et `reporter_user_id` comme utilisateur à l'origine du signalement.
 Les origines déléguées autorisées sont `diddigo`, `diddifood`, `diddisend` et
 `diddipay`.
+
+Pour une demande générale, DiddiComms omet obligatoirement les trois champs
+`origin_service`, `resource_type` et `resource_id` :
+
+```json
+{
+  "origin_report_id": "general-support-123",
+  "reporter_user_id": "22222222-2222-2222-2222-222222222222",
+  "category": "account_issue",
+  "subject": "Account issue",
+  "priority": "normal"
+}
+```
+
+Les trois champs de référence sont soit tous présents, soit tous absents. Une
+référence partielle retourne `422 SUPPORT_RESOURCE_REFERENCE_INCOMPLETE`. Seul
+`service:diddicomms` peut créer un dossier général ; aucun connecteur métier
+n'est appelé pour ce parcours.
 
 Deux appels avec la même `Idempotency-Key` et le même contenu retournent le
 même dossier. Une réutilisation avec un contenu différent retourne
@@ -95,6 +114,8 @@ dans [`docs/realtime/outbox-events.md`](../realtime/outbox-events.md).
 | 403 | `MESSAGE_AUTHOR_FORBIDDEN` | l'utilisateur n'est pas le reporter du dossier |
 | 404 | `CASE_NOT_FOUND` | dossier inexistant |
 | 409 | `IDEMPOTENCY_CONFLICT` | clé réutilisée avec un autre contenu |
+| 409 | `CASE_NOT_MODIFIABLE` | dossier résolu ou fermé |
+| 422 | `SUPPORT_RESOURCE_REFERENCE_INCOMPLETE` | référence métier partielle |
 | 503 | `SUPPORT_UNAVAILABLE` | Support temporairement indisponible |
 
 ## Responsabilités

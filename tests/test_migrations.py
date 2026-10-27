@@ -14,6 +14,7 @@ def test_migrations_are_discovered_in_order() -> None:
         "0005_support_actions.sql",
         "0006_message_idempotency.sql",
         "0007_outbox_dispatcher.sql",
+        "0008_general_support_cases.sql",
     ]
 
 

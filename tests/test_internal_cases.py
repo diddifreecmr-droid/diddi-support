@@ -114,6 +114,60 @@ def test_diddicomms_can_create_for_a_delegated_business_origin() -> None:
         app.dependency_overrides.pop(require_support_service, None)
 
 
+def test_diddicomms_can_create_a_general_case_without_business_reference() -> None:
+    app.dependency_overrides[require_support_service] = lambda: ServicePrincipal(
+        subject="service:diddicomms",
+        client_id="diddicomms-support",
+        scopes=frozenset({"diddi-support:cases:create"}),
+    )
+    try:
+        response = TestClient(app).post(
+            "/support/v1/internal/cases",
+            json={
+                "origin_report_id": "general-support-1",
+                "reporter_user_id": REPORTER_ID,
+                "category": "account_issue",
+                "subject": "Account issue",
+                "priority": "normal",
+            },
+            headers={"Idempotency-Key": "comms-general-1"},
+        )
+        assert response.status_code == 201
+        body = response.json()
+        assert body["case_id"] == body["id"]
+        assert body["created"] is True
+        assert body["created_at"]
+        assert body["origin_service"] is None
+        assert body["resource_type"] is None
+        assert body["resource_id"] is None
+    finally:
+        app.dependency_overrides.pop(require_support_service, None)
+
+
+def test_partial_business_reference_is_rejected_with_contract_error() -> None:
+    app.dependency_overrides[require_support_service] = lambda: ServicePrincipal(
+        subject="service:diddicomms",
+        client_id="diddicomms-support",
+        scopes=frozenset({"diddi-support:cases:create"}),
+    )
+    try:
+        response = TestClient(app).post(
+            "/support/v1/internal/cases",
+            json={
+                "origin_service": "diddigo",
+                "resource_type": "ride",
+                "reporter_user_id": REPORTER_ID,
+                "category": "payment_issue",
+                "subject": "Payment issue",
+            },
+            headers={"Idempotency-Key": "comms-partial-1"},
+        )
+        assert response.status_code == 422
+        assert response.json()["detail"]["code"] == "SUPPORT_RESOURCE_REFERENCE_INCOMPLETE"
+    finally:
+        app.dependency_overrides.pop(require_support_service, None)
+
+
 def test_diddicomms_cannot_create_for_an_unregistered_origin() -> None:
     app.dependency_overrides[require_support_service] = lambda: ServicePrincipal(
         subject="service:diddicomms",

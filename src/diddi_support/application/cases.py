@@ -16,9 +16,9 @@ class PersistentSupportCaseService:
     async def open_case(
         self,
         *,
-        origin_service: str,
-        resource_type: str,
-        resource_id: UUID,
+        origin_service: str | None,
+        resource_type: str | None,
+        resource_id: UUID | None,
         reporter_user_id: UUID,
         category: str,
         subject: str,
@@ -30,7 +30,7 @@ class PersistentSupportCaseService:
         payload: dict[str, Any] = {
             "origin_service": origin_service,
             "resource_type": resource_type,
-            "resource_id": str(resource_id),
+            "resource_id": str(resource_id) if resource_id else None,
             "reporter_user_id": str(reporter_user_id),
             "category": category,
             "subject": subject,

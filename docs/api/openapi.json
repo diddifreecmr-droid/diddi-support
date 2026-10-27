@@ -669,6 +669,54 @@
               ],
               "title": "Authorization"
             }
+          },
+          {
+            "name": "X-Client-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Client-Id"
+            }
+          },
+          {
+            "name": "X-Backoffice-Actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Actor"
+            }
+          },
+          {
+            "name": "X-Backoffice-Reason",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Reason"
+            }
           }
         ],
         "responses": {
@@ -731,6 +779,54 @@
                 }
               ],
               "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Client-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Client-Id"
+            }
+          },
+          {
+            "name": "X-Backoffice-Actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Actor"
+            }
+          },
+          {
+            "name": "X-Backoffice-Reason",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Reason"
             }
           }
         ],
@@ -801,6 +897,54 @@
               ],
               "title": "Authorization"
             }
+          },
+          {
+            "name": "X-Client-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Client-Id"
+            }
+          },
+          {
+            "name": "X-Backoffice-Actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Actor"
+            }
+          },
+          {
+            "name": "X-Backoffice-Reason",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Reason"
+            }
           }
         ],
         "requestBody": {
@@ -869,6 +1013,54 @@
                 }
               ],
               "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Client-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Client-Id"
+            }
+          },
+          {
+            "name": "X-Backoffice-Actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Actor"
+            }
+          },
+          {
+            "name": "X-Backoffice-Reason",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Reason"
             }
           }
         ],
@@ -941,6 +1133,54 @@
               ],
               "title": "Authorization"
             }
+          },
+          {
+            "name": "X-Client-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Client-Id"
+            }
+          },
+          {
+            "name": "X-Backoffice-Actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Actor"
+            }
+          },
+          {
+            "name": "X-Backoffice-Reason",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Reason"
+            }
           }
         ],
         "responses": {
@@ -993,6 +1233,54 @@
                 }
               ],
               "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Client-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Client-Id"
+            }
+          },
+          {
+            "name": "X-Backoffice-Actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Actor"
+            }
+          },
+          {
+            "name": "X-Backoffice-Reason",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Reason"
             }
           }
         ],
@@ -1063,6 +1351,54 @@
               ],
               "title": "Authorization"
             }
+          },
+          {
+            "name": "X-Client-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Client-Id"
+            }
+          },
+          {
+            "name": "X-Backoffice-Actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Actor"
+            }
+          },
+          {
+            "name": "X-Backoffice-Reason",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Reason"
+            }
           }
         ],
         "responses": {
@@ -1121,6 +1457,54 @@
                 }
               ],
               "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Client-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Client-Id"
+            }
+          },
+          {
+            "name": "X-Backoffice-Actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Actor"
+            }
+          },
+          {
+            "name": "X-Backoffice-Reason",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Reason"
             }
           }
         ],
@@ -1181,6 +1565,54 @@
               ],
               "title": "Authorization"
             }
+          },
+          {
+            "name": "X-Client-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Client-Id"
+            }
+          },
+          {
+            "name": "X-Backoffice-Actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Actor"
+            }
+          },
+          {
+            "name": "X-Backoffice-Reason",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Reason"
+            }
           }
         ],
         "responses": {
@@ -1239,6 +1671,54 @@
                 }
               ],
               "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Client-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Client-Id"
+            }
+          },
+          {
+            "name": "X-Backoffice-Actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Actor"
+            }
+          },
+          {
+            "name": "X-Backoffice-Reason",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Reason"
             }
           }
         ],
@@ -1299,6 +1779,54 @@
               ],
               "title": "Authorization"
             }
+          },
+          {
+            "name": "X-Client-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Client-Id"
+            }
+          },
+          {
+            "name": "X-Backoffice-Actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Actor"
+            }
+          },
+          {
+            "name": "X-Backoffice-Reason",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Reason"
+            }
           }
         ],
         "responses": {
@@ -1357,6 +1885,54 @@
                 }
               ],
               "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Client-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Client-Id"
+            }
+          },
+          {
+            "name": "X-Backoffice-Actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Actor"
+            }
+          },
+          {
+            "name": "X-Backoffice-Reason",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Reason"
             }
           }
         ],
@@ -1425,6 +2001,54 @@
               ],
               "title": "Authorization"
             }
+          },
+          {
+            "name": "X-Client-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Client-Id"
+            }
+          },
+          {
+            "name": "X-Backoffice-Actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Actor"
+            }
+          },
+          {
+            "name": "X-Backoffice-Reason",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Reason"
+            }
           }
         ],
         "responses": {
@@ -1488,6 +2112,54 @@
               ],
               "title": "Authorization"
             }
+          },
+          {
+            "name": "X-Client-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Client-Id"
+            }
+          },
+          {
+            "name": "X-Backoffice-Actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Actor"
+            }
+          },
+          {
+            "name": "X-Backoffice-Reason",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Reason"
+            }
           }
         ],
         "responses": {
@@ -1550,6 +2222,54 @@
                 }
               ],
               "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Client-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Client-Id"
+            }
+          },
+          {
+            "name": "X-Backoffice-Actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Actor"
+            }
+          },
+          {
+            "name": "X-Backoffice-Reason",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Reason"
             }
           }
         ],
@@ -1620,6 +2340,54 @@
               ],
               "title": "Authorization"
             }
+          },
+          {
+            "name": "X-Client-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Client-Id"
+            }
+          },
+          {
+            "name": "X-Backoffice-Actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Actor"
+            }
+          },
+          {
+            "name": "X-Backoffice-Reason",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Reason"
+            }
           }
         ],
         "requestBody": {
@@ -1686,6 +2454,54 @@
                 }
               ],
               "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Client-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Client-Id"
+            }
+          },
+          {
+            "name": "X-Backoffice-Actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Actor"
+            }
+          },
+          {
+            "name": "X-Backoffice-Reason",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Reason"
             }
           }
         ],
@@ -1760,6 +2576,54 @@
               ],
               "title": "Authorization"
             }
+          },
+          {
+            "name": "X-Client-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Client-Id"
+            }
+          },
+          {
+            "name": "X-Backoffice-Actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Actor"
+            }
+          },
+          {
+            "name": "X-Backoffice-Reason",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Reason"
+            }
           }
         ],
         "responses": {
@@ -1818,6 +2682,54 @@
                 }
               ],
               "title": "Authorization"
+            }
+          },
+          {
+            "name": "X-Client-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Client-Id"
+            }
+          },
+          {
+            "name": "X-Backoffice-Actor",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Actor"
+            }
+          },
+          {
+            "name": "X-Backoffice-Reason",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Backoffice-Reason"
             }
           }
         ],
@@ -2225,17 +3137,43 @@
             "format": "uuid",
             "title": "Id"
           },
-          "origin_service": {
+          "case_id": {
             "type": "string",
+            "format": "uuid",
+            "title": "Case Id"
+          },
+          "origin_service": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Origin Service"
           },
           "resource_type": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Resource Type"
           },
           "resource_id": {
-            "type": "string",
-            "format": "uuid",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Resource Id"
           },
           "reporter_user_id": {
@@ -2261,12 +3199,18 @@
           "created": {
             "type": "boolean",
             "title": "Created"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
           }
         },
         "additionalProperties": false,
         "type": "object",
         "required": [
           "id",
+          "case_id",
           "origin_service",
           "resource_type",
           "resource_id",
@@ -2275,7 +3219,8 @@
           "subject",
           "priority",
           "status",
-          "created"
+          "created",
+          "created_at"
         ],
         "title": "CaseResponse"
       },
@@ -2287,16 +3232,37 @@
             "title": "Id"
           },
           "origin_service": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Origin Service"
           },
           "resource_type": {
-            "type": "string",
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Resource Type"
           },
           "resource_id": {
-            "type": "string",
-            "format": "uuid",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Resource Id"
           },
           "reporter_user_id": {
@@ -2435,18 +3401,39 @@
       "CreateCaseRequest": {
         "properties": {
           "origin_service": {
-            "type": "string",
-            "pattern": "^[a-z][a-z0-9-]{1,63}$",
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]{1,63}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Origin Service"
           },
           "resource_type": {
-            "type": "string",
-            "pattern": "^[a-z][a-z0-9_-]{1,63}$",
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_-]{1,63}$"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Resource Type"
           },
           "resource_id": {
-            "type": "string",
-            "format": "uuid",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Resource Id"
           },
           "origin_report_id": {
@@ -2486,9 +3473,6 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "origin_service",
-          "resource_type",
-          "resource_id",
           "reporter_user_id",
           "category",
           "subject"

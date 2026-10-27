@@ -120,38 +120,39 @@ def require_diddicomms(
 class CreateCaseRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    origin_service: str = Field(pattern=r"^[a-z][a-z0-9-]{1,63}$")
-    resource_type: str = Field(pattern=r"^[a-z][a-z0-9_-]{1,63}$")
-    resource_id: UUID
+    origin_service: str | None = Field(default=None, pattern=r"^[a-z][a-z0-9-]{1,63}$")
+    resource_type: str | None = Field(default=None, pattern=r"^[a-z][a-z0-9_-]{1,63}$")
+    resource_id: UUID | None = None
     origin_report_id: str | None = Field(default=None, max_length=160)
     reporter_user_id: UUID
     category: str = Field(min_length=1, max_length=80)
     subject: str = Field(min_length=1, max_length=200)
     priority: CasePriority = CasePriority.NORMAL
 
-
 class CaseResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     id: UUID
-    origin_service: str
-    resource_type: str
-    resource_id: UUID
+    case_id: UUID
+    origin_service: str | None
+    resource_type: str | None
+    resource_id: UUID | None
     reporter_user_id: UUID
     category: str
     subject: str
     priority: CasePriority
     status: str
     created: bool
+    created_at: datetime
 
 
 class CaseSnapshot(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     id: UUID
-    origin_service: str
-    resource_type: str
-    resource_id: UUID
+    origin_service: str | None
+    resource_type: str | None
+    resource_id: UUID | None
     reporter_user_id: UUID
     category: str
     subject: str
@@ -306,15 +307,25 @@ async def create_case(
 ) -> CaseResponse:
     if CREATE_CASE_SCOPE not in principal.scopes:
         raise HTTPException(status_code=403, detail={"code": "SERVICE_SCOPE_FORBIDDEN"})
+    reference_fields = (payload.origin_service, payload.resource_type, payload.resource_id)
+    if any(value is not None for value in reference_fields) and not all(
+        value is not None for value in reference_fields
+    ):
+        raise HTTPException(
+            status_code=422,
+            detail={"code": "SUPPORT_RESOURCE_REFERENCE_INCOMPLETE"},
+        )
     if principal.subject == "service:diddicomms":
         if (
             settings.diddicomms_service_client_id
             and principal.client_id != settings.diddicomms_service_client_id
         ):
             raise HTTPException(status_code=403, detail={"code": "CONTEXT_CLIENT_ID_FORBIDDEN"})
-        if not _delegated_origin_allowed(payload.origin_service):
+        if payload.origin_service is not None and not _delegated_origin_allowed(
+            payload.origin_service
+        ):
             raise HTTPException(status_code=403, detail={"code": "SERVICE_ORIGIN_FORBIDDEN"})
-    elif principal.subject != f"service:{payload.origin_service}":
+    elif payload.origin_service is None or principal.subject != f"service:{payload.origin_service}":
         raise HTTPException(status_code=403, detail={"code": "SERVICE_ORIGIN_FORBIDDEN"})
     if not idempotency_key:
         raise HTTPException(status_code=400, detail={"code": "IDEMPOTENCY_KEY_REQUIRED"})
@@ -351,6 +362,7 @@ async def create_case(
 
     return CaseResponse(
         id=case.id,
+        case_id=case.id,
         origin_service=case.origin_service,
         resource_type=case.resource_type,
         resource_id=case.resource_id,
@@ -360,6 +372,7 @@ async def create_case(
         priority=case.priority,
         status=case.status.value,
         created=created,
+        created_at=case.created_at,
     )
 
 

@@ -51,7 +51,11 @@ def _safe_payload(event: OutboxRecord) -> dict[str, Any]:
         SupportEventType.CASE_RESOLVED.value: {"case_id", "status", "resolution_code"},
         SupportEventType.CASE_MESSAGE_CREATED.value: {"case_id", "message_id", "visibility"},
     }.get(event_type, {"case_id", "status", "agent_id"})
-    return {key: value for key, value in event.payload.items() if key in allowed}
+    return {
+        key: value
+        for key, value in event.payload.items()
+        if key in allowed and value is not None
+    }
 
 
 def event_envelope(event: OutboxRecord) -> dict[str, Any]:

@@ -18,9 +18,9 @@ class SupportCaseModel(Base):
     __tablename__ = "support_cases"
 
     id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
-    origin_service: Mapped[str] = mapped_column(String(64))
-    resource_type: Mapped[str] = mapped_column(String(64))
-    resource_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True))
+    origin_service: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    resource_type: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    resource_id: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), nullable=True)
     origin_report_id: Mapped[str | None] = mapped_column(String(160))
     reporter_user_id: Mapped[UUID] = mapped_column(PGUUID(as_uuid=True))
     category: Mapped[str] = mapped_column(String(80))
