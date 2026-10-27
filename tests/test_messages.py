@@ -216,3 +216,38 @@ def test_diddicomms_user_message_must_match_case_reporter() -> None:
         assert response.json()["detail"]["code"] == "MESSAGE_AUTHOR_FORBIDDEN"
     finally:
         app.dependency_overrides.pop(require_support_service, None)
+
+
+def test_resolved_case_rejects_user_and_agent_messages() -> None:
+    case, _ = internal_router.case_service.open_case(
+        origin_service="diddigo",
+        resource_type="ride",
+        resource_id=UUID("99999999-9999-9999-9999-999999999999"),
+        reporter_user_id=CASE_USER_ID,
+        category="support",
+        subject="Resolved conversation",
+        idempotency_key="sprint2-resolved-case",
+    )
+    case.transition_to("in_progress")
+    case.transition_to("resolved")
+    app.dependency_overrides[require_support_service] = _diddicomms_principal
+    app.dependency_overrides[require_support_agent] = _agent_permissions
+    try:
+        client = TestClient(app)
+        user_response = client.post(
+            f"/support/v1/internal/cases/{case.id}/messages",
+            headers={"Idempotency-Key": "sprint2-resolved-user-message"},
+            json={"reporter_user_id": str(CASE_USER_ID), "body": "Encore un message."},
+        )
+        agent_response = client.post(
+            f"/support/v1/backoffice/cases/{case.id}/messages",
+            json={"body": "Réponse après résolution.", "visibility": "user_visible"},
+        )
+
+        assert user_response.status_code == 409
+        assert user_response.json()["detail"]["code"] == "CASE_NOT_MODIFIABLE"
+        assert agent_response.status_code == 409
+        assert agent_response.json()["detail"]["code"] == "CASE_NOT_MODIFIABLE"
+    finally:
+        app.dependency_overrides.pop(require_support_service, None)
+        app.dependency_overrides.pop(require_support_agent, None)

@@ -433,6 +433,7 @@ async def create_user_message(
     case = await _load_case(case_id, session)
     if case is None:
         raise HTTPException(status_code=404, detail={"code": "CASE_NOT_FOUND"})
+    _ensure_case_modifiable(case)
     if payload.reporter_user_id != case.reporter_user_id:
         raise HTTPException(status_code=403, detail={"code": "MESSAGE_AUTHOR_FORBIDDEN"})
 
@@ -838,8 +839,10 @@ async def add_backoffice_message(
         raise HTTPException(status_code=400, detail={"code": "SYSTEM_MESSAGE_FORBIDDEN"})
     if required_permission not in principal.permissions:
         raise HTTPException(status_code=403, detail={"code": "BACKOFFICE_PERMISSION_FORBIDDEN"})
-    if await _load_case(case_id, session) is None:
+    case = await _load_case(case_id, session)
+    if case is None:
         raise HTTPException(status_code=404, detail={"code": "CASE_NOT_FOUND"})
+    _ensure_case_modifiable(case)
     message = SupportMessage(
         case_id=case_id,
         author_type=MessageAuthorType.AGENT,
@@ -1095,6 +1098,11 @@ def _to_snapshot(case) -> CaseSnapshot:
         status=case.status.value,
         assigned_agent_id=case.assigned_agent_id,
     )
+
+
+def _ensure_case_modifiable(case) -> None:
+    if case.status in {CaseStatus.RESOLVED, CaseStatus.CLOSED}:
+        raise HTTPException(status_code=409, detail={"code": "CASE_NOT_MODIFIABLE"})
 
 
 def _to_sos_response(alert: SosAlert) -> SosResponse:
