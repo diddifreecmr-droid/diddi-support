@@ -54,11 +54,21 @@
     ]
   },
   "resource_reference": {
-    "required_fields": [
+    "contextual_required_fields": [
       "origin_service",
       "resource_type",
       "resource_id"
     ],
+    "general_case": {
+      "allowed": true,
+      "required_absent_fields": [
+        "origin_service",
+        "resource_type",
+        "resource_id"
+      ],
+      "allowed_callers": ["diddicomms"]
+    },
+    "partial_reference_error": "SUPPORT_RESOURCE_REFERENCE_INCOMPLETE",
     "optional_fields": [
       "origin_report_id"
     ],

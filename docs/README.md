@@ -1,15 +1,19 @@
 # Documentation DiddiSupport
 
-La documentation suit les contrats réellement implémentés. Une fonctionnalité
-proposée mais non livrée doit être marquée `proposed` ou `future`.
+Ce dossier décrit les contrats réellement livrés de DiddiSupport et s'adresse
+aux équipes backend, frontend, support et intégration.
 
-## Règles
+- [API](api/), [guides](guides/), [temps réel](realtime/), [intégrations](integrations/)
+- [référence](reference/), [changements](changelog/) et [_archive](_archive/)
+- [configuration d'environnement](../env/)
 
-- `api/openapi.json` est généré depuis l'application ;
-- chaque erreur publique est ajoutée à `api/error-catalog.md` ;
-- chaque intégration documente l'audience, les scopes, les routes, les retries
-  et les erreurs ;
-- chaque sprint ajoute une entrée dans `changelog/` ;
-- les valeurs techniques viennent de l'environnement ;
-- les règles métier et de sécurité versionnées nécessitent un redeploiement.
+## Hors périmètre pour l'instant
 
+- Le contrat frontend public est `PRÉVU` via la façade DiddiComms ; les routes
+  internes S2S de DiddiSupport ne sont pas des routes frontend.
+- Aucun WebSocket DiddiSupport n'est livré ; les deux fichiers realtime le
+  signalent explicitement.
+
+`api/openapi.json` est généré depuis l'application avec
+`python scripts/generate_openapi.py`. Une fonctionnalité non implémentée est
+marquée `PRÉVU` et ne doit pas être utilisée par un client.
