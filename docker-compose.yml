@@ -104,6 +104,8 @@ services:
 
   redis:
     image: redis:7-alpine
+    ports:
+      - "${DIDDISUPPORT_REDIS_HOST_PORT:-16382}:6379"
 
 volumes:
   support_postgres_data:
