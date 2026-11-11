@@ -727,7 +727,7 @@ def _to_domain(model: SupportCaseModel) -> SupportCase:
         category=model.category,
         subject=model.subject,
         priority=CasePriority(model.priority),
-        status=model.status,
+        status=CaseStatus(model.status),
         assigned_agent_id=model.assigned_agent_id,
         resolution_code=model.resolution_code,
         created_at=model.created_at,
