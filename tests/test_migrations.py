@@ -15,6 +15,7 @@ def test_migrations_are_discovered_in_order() -> None:
         "0006_message_idempotency.sql",
         "0007_outbox_dispatcher.sql",
         "0008_general_support_cases.sql",
+        "0009_deferred_case_idempotency_fk.sql",
     ]
 
 
@@ -22,3 +23,10 @@ def test_asyncpg_dsn_removes_sqlalchemy_driver_suffix() -> None:
     assert asyncpg_dsn("postgresql+asyncpg://user:pass@db:5432/support") == (
         "postgresql://user:pass@db:5432/support"
     )
+
+
+def test_case_idempotency_foreign_key_is_deferred() -> None:
+    sql = Path("migrations/0009_deferred_case_idempotency_fk.sql").read_text(encoding="utf-8")
+
+    assert "support_case_operations_case_id_fkey" in sql
+    assert "DEFERRABLE INITIALLY DEFERRED" in sql
