@@ -16,6 +16,7 @@ def test_migrations_are_discovered_in_order() -> None:
         "0007_outbox_dispatcher.sql",
         "0008_general_support_cases.sql",
         "0009_deferred_case_idempotency_fk.sql",
+        "0010_deferred_message_idempotency_fk.sql",
     ]
 
 
@@ -29,4 +30,11 @@ def test_case_idempotency_foreign_key_is_deferred() -> None:
     sql = Path("migrations/0009_deferred_case_idempotency_fk.sql").read_text(encoding="utf-8")
 
     assert "support_case_operations_case_id_fkey" in sql
+    assert "DEFERRABLE INITIALLY DEFERRED" in sql
+
+
+def test_message_idempotency_foreign_key_is_deferred() -> None:
+    sql = Path("migrations/0010_deferred_message_idempotency_fk.sql").read_text(encoding="utf-8")
+
+    assert "support_message_operations_message_id_fkey" in sql
     assert "DEFERRABLE INITIALLY DEFERRED" in sql
