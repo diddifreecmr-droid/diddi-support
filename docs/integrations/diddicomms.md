@@ -100,6 +100,30 @@ via le stream Redis `diddisupport.events`, avec l'événement
 `support.case.message.created.v1`. Les notes
 `internal_note` resteront invisibles à l'utilisateur.
 
+### Réponse générée par l'agent IA
+
+DiddiComms peut aussi publier une réponse IA sur un dossier existant avec la
+même route. Le dossier ne doit pas être recréé :
+
+```json
+{
+  "author_type": "ai",
+  "author_id": "service:diddicomms",
+  "body": "Réponse générée par l’assistant IA"
+}
+```
+
+DiddiSupport conserve `author_type=ai`, conserve
+`author_id=service:diddicomms` et force la visibilité `user_visible`. Le
+message est donc visible dans la conversation utilisateur et dans le
+Backoffice, sans être enregistré comme un message `user`.
+
+La clé `Idempotency-Key` doit rester stable pour la réponse IA, par exemple
+`ai-reply-<source-message-id>`. La même clé avec le même payload retourne le
+même message ; la même clé avec un contenu différent retourne
+`409 IDEMPOTENCY_CONFLICT`. La réponse contient `id` pour compatibilité et
+`message_id` comme identifiant canonique du message.
+
 Le contrat complet de l'enveloppe, de l'idempotence et du rejeu est décrit
 dans [`docs/realtime/outbox-events.md`](../realtime/outbox-events.md).
 

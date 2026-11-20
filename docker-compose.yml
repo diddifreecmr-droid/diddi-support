@@ -12,12 +12,19 @@ services:
         required: false
     depends_on:
       postgres:
-        condition: service_started
+        condition: service_healthy
 
   support:
     build: .
     ports:
       - "8050:8050"
+    healthcheck:
+      test:
+        ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8050/health/live', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://diddi_support:diddi_support@postgres:5432/diddi_support}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
@@ -65,13 +72,20 @@ services:
       support-migrate:
         condition: service_completed_successfully
       redis:
-        condition: service_started
+        condition: service_healthy
 
   support-outbox-worker:
     build: .
     command: ["python", "-m", "diddi_support.ops.outbox_worker"]
     ports:
       - "9105:9105"
+    healthcheck:
+      test:
+        ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9105/metrics', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgresql+asyncpg://diddi_support:diddi_support@postgres:5432/diddi_support}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
@@ -91,7 +105,7 @@ services:
       support-migrate:
         condition: service_completed_successfully
       redis:
-        condition: service_started
+        condition: service_healthy
 
   postgres:
     image: postgres:16-alpine
@@ -99,11 +113,23 @@ services:
       POSTGRES_DB: diddi_support
       POSTGRES_USER: diddi_support
       POSTGRES_PASSWORD: diddi_support
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U diddi_support -d diddi_support"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
     volumes:
       - support_postgres_data:/var/lib/postgresql/data
 
   redis:
     image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
     ports:
       - "${DIDDISUPPORT_REDIS_HOST_PORT:-16382}:6379"
 

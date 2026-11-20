@@ -7,6 +7,10 @@ aux équipes backend, frontend, support et intégration.
 - [référence](reference/), [changements](changelog/) et [_archive](_archive/)
 - [configuration d'environnement](../env/)
 
+## Intégrations
+
+- [Contrat DiddiBackoffice ↔ DiddiSupport](integrations/diddibackoffice.md)
+
 ## Hors périmètre pour l'instant
 
 - Le contrat frontend public est `PRÉVU` via la façade DiddiComms ; les routes

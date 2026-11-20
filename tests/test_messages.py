@@ -192,6 +192,86 @@ def test_diddicomms_can_create_idempotent_user_message_and_read_visible_messages
         app.dependency_overrides.pop(require_support_agent, None)
 
 
+def test_diddicomms_can_create_idempotent_ai_message_without_copying_user() -> None:
+    case, _ = internal_router.case_service.open_case(
+        origin_service="diddigo",
+        resource_type="ride",
+        resource_id=UUID("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
+        reporter_user_id=CASE_USER_ID,
+        category="support",
+        subject="AI conversation",
+        idempotency_key="ai-message-case-1",
+    )
+    app.dependency_overrides[require_support_service] = _diddicomms_principal
+    try:
+        client = TestClient(app)
+        headers = {"Idempotency-Key": "ai-reply-source-message-1"}
+        payload = {
+            "author_type": "ai",
+            "author_id": "service:diddicomms",
+            "body": "Réponse générée par l’assistant IA",
+        }
+        first = client.post(
+            f"/support/v1/internal/cases/{case.id}/messages",
+            headers=headers,
+            json=payload,
+        )
+        replay = client.post(
+            f"/support/v1/internal/cases/{case.id}/messages",
+            headers=headers,
+            json=payload,
+        )
+        conflict = client.post(
+            f"/support/v1/internal/cases/{case.id}/messages",
+            headers=headers,
+            json={**payload, "body": "Réponse différente"},
+        )
+        visible = client.get(f"/support/v1/internal/cases/{case.id}/messages")
+
+        assert first.status_code == 201
+        assert replay.status_code == 201
+        assert first.json()["message_id"] == first.json()["id"]
+        assert replay.json()["message_id"] == first.json()["message_id"]
+        assert first.json()["author_type"] == "ai"
+        assert first.json()["author_id"] == "service:diddicomms"
+        assert first.json()["visibility"] == "user_visible"
+        assert conflict.status_code == 409
+        assert conflict.json()["detail"]["code"] == "IDEMPOTENCY_CONFLICT"
+        assert visible.status_code == 200
+        assert len(visible.json()) == 1
+        assert visible.json()[0]["author_type"] == "ai"
+        assert visible.json()[0]["author_id"] == "service:diddicomms"
+    finally:
+        app.dependency_overrides.pop(require_support_service, None)
+
+
+def test_diddicomms_rejects_untrusted_ai_author_id() -> None:
+    case, _ = internal_router.case_service.open_case(
+        origin_service="diddigo",
+        resource_type="ride",
+        resource_id=UUID("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
+        reporter_user_id=CASE_USER_ID,
+        category="support",
+        subject="AI attribution check",
+        idempotency_key="ai-message-case-2",
+    )
+    app.dependency_overrides[require_support_service] = _diddicomms_principal
+    try:
+        response = TestClient(app).post(
+            f"/support/v1/internal/cases/{case.id}/messages",
+            headers={"Idempotency-Key": "ai-reply-invalid-author"},
+            json={
+                "author_type": "ai",
+                "author_id": "user:spoofed",
+                "body": "Message non autorisé",
+            },
+        )
+        assert response.status_code == 403
+        assert response.json()["detail"]["code"] == "AI_MESSAGE_AUTHOR_FORBIDDEN"
+    finally:
+        app.dependency_overrides.pop(require_support_service, None)
+
+
 def test_diddicomms_user_message_must_match_case_reporter() -> None:
     case, _ = internal_router.case_service.open_case(
         origin_service="diddigo",

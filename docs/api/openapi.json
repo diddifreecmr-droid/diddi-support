@@ -3578,9 +3578,33 @@
       "CreateUserMessageRequest": {
         "properties": {
           "reporter_user_id": {
-            "type": "string",
-            "format": "uuid",
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
             "title": "Reporter User Id"
+          },
+          "author_type": {
+            "$ref": "#/components/schemas/MessageAuthorType",
+            "default": "user"
+          },
+          "author_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 160,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author Id"
           },
           "body": {
             "type": "string",
@@ -3592,7 +3616,6 @@
         "additionalProperties": false,
         "type": "object",
         "required": [
-          "reporter_user_id",
           "body"
         ],
         "title": "CreateUserMessageRequest"
@@ -3645,6 +3668,7 @@
         "enum": [
           "user",
           "agent",
+          "ai",
           "system"
         ],
         "title": "MessageAuthorType"
@@ -3655,6 +3679,11 @@
             "type": "string",
             "format": "uuid",
             "title": "Id"
+          },
+          "message_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Message Id"
           },
           "case_id": {
             "type": "string",
@@ -3684,6 +3713,7 @@
         "type": "object",
         "required": [
           "id",
+          "message_id",
           "case_id",
           "author_type",
           "author_id",

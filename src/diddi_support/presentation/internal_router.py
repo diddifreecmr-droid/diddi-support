@@ -190,12 +190,15 @@ class CreateMessageRequest(BaseModel):
 class CreateUserMessageRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    reporter_user_id: UUID
+    reporter_user_id: UUID | None = None
+    author_type: MessageAuthorType = MessageAuthorType.USER
+    author_id: str | None = Field(default=None, min_length=1, max_length=160)
     body: str = Field(min_length=1, max_length=10_000)
 
 
 class MessageResponse(BaseModel):
     id: UUID
+    message_id: UUID
     case_id: UUID
     author_type: MessageAuthorType
     author_id: str
@@ -434,22 +437,43 @@ async def create_user_message(
     if case is None:
         raise HTTPException(status_code=404, detail={"code": "CASE_NOT_FOUND"})
     _ensure_case_modifiable(case)
-    if payload.reporter_user_id != case.reporter_user_id:
-        raise HTTPException(status_code=403, detail={"code": "MESSAGE_AUTHOR_FORBIDDEN"})
+
+    if payload.author_type == MessageAuthorType.USER:
+        if payload.reporter_user_id is None:
+            raise HTTPException(status_code=422, detail={"code": "REPORTER_USER_ID_REQUIRED"})
+        if payload.author_id is not None:
+            raise HTTPException(status_code=400, detail={"code": "MESSAGE_AUTHOR_ID_FORBIDDEN"})
+        if payload.reporter_user_id != case.reporter_user_id:
+            raise HTTPException(status_code=403, detail={"code": "MESSAGE_AUTHOR_FORBIDDEN"})
+        author_id = str(payload.reporter_user_id)
+    elif payload.author_type == MessageAuthorType.AI:
+        if payload.author_id != "service:diddicomms":
+            raise HTTPException(status_code=403, detail={"code": "AI_MESSAGE_AUTHOR_FORBIDDEN"})
+        author_id = payload.author_id
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail={"code": "MESSAGE_AUTHOR_TYPE_UNSUPPORTED"},
+        )
 
     message = SupportMessage(
         case_id=case_id,
-        author_type=MessageAuthorType.USER,
-        author_id=str(payload.reporter_user_id),
+        author_type=payload.author_type,
+        author_id=author_id,
         body=payload.body,
         visibility=MessageVisibility.USER_VISIBLE.value,
     )
     request_payload = {
         "case_id": str(case_id),
-        "reporter_user_id": str(payload.reporter_user_id),
         "body": payload.body,
         "visibility": MessageVisibility.USER_VISIBLE.value,
     }
+    if payload.author_type == MessageAuthorType.USER:
+        # Keep the historical fingerprint stable for existing user messages.
+        request_payload["reporter_user_id"] = str(payload.reporter_user_id)
+    else:
+        request_payload["author_type"] = payload.author_type.value
+        request_payload["author_id"] = author_id
     try:
         if session is None:
             message, _ = conversation_service.create_or_get_message(
@@ -1139,6 +1163,7 @@ def _to_action_response(action: SupportAction) -> ActionResponse:
 def _to_message_response(message: SupportMessage) -> MessageResponse:
     return MessageResponse(
         id=message.id,
+        message_id=message.id,
         case_id=message.case_id,
         author_type=message.author_type,
         author_id=message.author_id,

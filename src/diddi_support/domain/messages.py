@@ -9,6 +9,7 @@ from uuid import UUID, uuid4
 class MessageAuthorType(StrEnum):
     USER = "user"
     AGENT = "agent"
+    AI = "ai"
     SYSTEM = "system"
 
 
