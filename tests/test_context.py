@@ -18,11 +18,25 @@ from diddi_support.core.auth import (
     require_support_service,
     validate_service_claims,
 )
-from diddi_support.infrastructure.context.http import HttpContextProvider
+from diddi_support.core.config import settings
+from diddi_support.infrastructure.context.http import HttpContextProvider, providers_from_settings
 from diddi_support.main import app
 from diddi_support.presentation import internal_router
 
 RIDE_ID = UUID("11111111-1111-1111-1111-111111111111")
+
+
+def test_diddishop_connector_is_built_from_service_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(settings, "diddisupport_diddishop_base_url", "http://diddishop")
+    monkeypatch.setattr(settings, "diddifreeid_service_token_url", "http://identity/token")
+    monkeypatch.setattr(settings, "diddisupport_diddishop_service_client_id", "support-shop")
+    monkeypatch.setattr(settings, "diddisupport_diddishop_service_client_secret", "secret")
+
+    providers = providers_from_settings()
+
+    assert providers["diddishop"].base_url == "http://diddishop"
+    assert providers["diddishop"].scope == "diddishop:support-context:read"
+    assert providers["diddishop"].audience == "diddishop"
 
 
 def test_service_identity_claims_require_consistent_service_subject() -> None:

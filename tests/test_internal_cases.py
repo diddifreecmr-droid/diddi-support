@@ -114,6 +114,32 @@ def test_diddicomms_can_create_for_a_delegated_business_origin() -> None:
         app.dependency_overrides.pop(require_support_service, None)
 
 
+def test_diddishop_can_create_for_its_own_order() -> None:
+    app.dependency_overrides[require_support_service] = lambda: ServicePrincipal(
+        subject="service:diddishop",
+        client_id="diddishop-support",
+        scopes=frozenset({"diddi-support:cases:create"}),
+    )
+    try:
+        response = TestClient(app).post(
+            "/support/v1/internal/cases",
+            json={
+                "origin_service": "diddishop",
+                "resource_type": "order",
+                "resource_id": RIDE_ID,
+                "reporter_user_id": REPORTER_ID,
+                "category": "order_missing_item",
+                "subject": "Missing item",
+            },
+            headers={"Idempotency-Key": "diddishop-order-1"},
+        )
+        assert response.status_code == 201
+        assert response.json()["origin_service"] == "diddishop"
+        assert response.json()["resource_type"] == "order"
+    finally:
+        app.dependency_overrides.pop(require_support_service, None)
+
+
 def test_diddicomms_can_create_a_general_case_without_business_reference() -> None:
     app.dependency_overrides[require_support_service] = lambda: ServicePrincipal(
         subject="service:diddicomms",
