@@ -8,6 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from diddi_support.core.audit_context import get_backoffice_reason
 from diddi_support.domain.actions import ActionStatus, ActionType, SupportAction
 from diddi_support.domain.cases import (
     CasePriority,
@@ -40,6 +41,13 @@ from diddi_support.infrastructure.persistence.models import (
     SupportMessageOperationModel,
     SupportOutboxEventModel,
 )
+
+
+def _audit_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
+    reason = get_backoffice_reason()
+    if reason is None:
+        return metadata
+    return {**metadata, "backoffice_reason": reason}
 
 
 class PostgresSupportCaseRepository:
@@ -97,7 +105,7 @@ class PostgresSupportCaseRepository:
                 outcome="succeeded",
                 actor_id=None,
                 request_id=request_id,
-                metadata_json={**metadata, "actor_id": actor_id},
+                metadata_json=_audit_metadata({**metadata, "actor_id": actor_id}),
                 occurred_at=datetime.now(UTC),
             )
         )
@@ -146,7 +154,9 @@ class PostgresSupportCaseRepository:
                 outcome="succeeded",
                 actor_id=None,
                 request_id=request_id,
-                metadata_json={"actor_id": actor_id, "fetched_at": fetched_at.isoformat()},
+                metadata_json=_audit_metadata(
+                    {"actor_id": actor_id, "fetched_at": fetched_at.isoformat()}
+                ),
                 occurred_at=datetime.now(UTC),
             )
         )
@@ -180,11 +190,13 @@ class PostgresSupportCaseRepository:
                 outcome="succeeded",
                 actor_id=None,
                 request_id=request_id,
-                metadata_json={
-                    "actor_id": actor_id,
-                    "case_id": str(message.case_id),
-                    "visibility": message.visibility,
-                },
+                metadata_json=_audit_metadata(
+                    {
+                        "actor_id": actor_id,
+                        "case_id": str(message.case_id),
+                        "visibility": message.visibility,
+                    }
+                ),
                 occurred_at=datetime.now(UTC),
             )
         )
@@ -283,11 +295,13 @@ class PostgresSupportCaseRepository:
                     outcome="succeeded",
                     actor_id=None,
                     request_id=request_id,
-                    metadata_json={
-                        "actor_id": actor_id,
-                        "case_id": str(message.case_id),
-                        "visibility": message.visibility,
-                    },
+                    metadata_json=_audit_metadata(
+                        {
+                            "actor_id": actor_id,
+                            "case_id": str(message.case_id),
+                            "visibility": message.visibility,
+                        }
+                    ),
                     occurred_at=datetime.now(UTC),
                 )
             )
@@ -349,12 +363,14 @@ class PostgresSupportCaseRepository:
                 outcome="succeeded",
                 actor_id=None,
                 request_id=request_id,
-                metadata_json={
-                    "actor_id": actor_id,
-                    "case_id": str(attachment.case_id),
-                    "file_id": str(attachment.file_id),
-                    "purpose": attachment.purpose.value,
-                },
+                metadata_json=_audit_metadata(
+                    {
+                        "actor_id": actor_id,
+                        "case_id": str(attachment.case_id),
+                        "file_id": str(attachment.file_id),
+                        "purpose": attachment.purpose.value,
+                    }
+                ),
                 occurred_at=datetime.now(UTC),
             )
         )
@@ -421,7 +437,7 @@ class PostgresSupportCaseRepository:
                 outcome="succeeded",
                 actor_id=alert.reporter_user_id,
                 request_id=request_id,
-                metadata_json={"origin_service": alert.origin_service},
+                metadata_json=_audit_metadata({"origin_service": alert.origin_service}),
                 occurred_at=datetime.now(UTC),
             )
         )
@@ -493,10 +509,12 @@ class PostgresSupportCaseRepository:
                 outcome="succeeded",
                 actor_id=None,
                 request_id=request_id,
-                metadata_json={
-                    "actor_id": actor_id,
-                    "handling_status": alert.handling_status.value,
-                },
+                metadata_json=_audit_metadata(
+                    {
+                        "actor_id": actor_id,
+                        "handling_status": alert.handling_status.value,
+                    }
+                ),
                 occurred_at=datetime.now(UTC),
             )
         )
@@ -546,7 +564,7 @@ class PostgresSupportCaseRepository:
                 outcome="succeeded",
                 actor_id=None,
                 request_id=request_id,
-                metadata_json={"requested_by": action.requested_by},
+                metadata_json=_audit_metadata({"requested_by": action.requested_by}),
                 occurred_at=datetime.now(UTC),
             )
         )
@@ -605,7 +623,7 @@ class PostgresSupportCaseRepository:
                 outcome="succeeded",
                 actor_id=None,
                 request_id=request_id,
-                metadata_json={"status": action.status.value},
+                metadata_json=_audit_metadata({"status": action.status.value}),
                 occurred_at=datetime.now(UTC),
             )
         )
@@ -667,10 +685,12 @@ class PostgresSupportCaseRepository:
                     outcome="succeeded",
                     actor_id=case.reporter_user_id,
                     request_id=request_id,
-                    metadata_json={
-                        "origin_service": case.origin_service,
-                        "resource_type": case.resource_type,
-                    },
+                    metadata_json=_audit_metadata(
+                        {
+                            "origin_service": case.origin_service,
+                            "resource_type": case.resource_type,
+                        }
+                    ),
                     occurred_at=datetime.now(UTC),
                 )
             )
