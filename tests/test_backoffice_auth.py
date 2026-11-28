@@ -2,6 +2,7 @@ from uuid import UUID
 
 import jwt
 import pytest
+from fastapi.testclient import TestClient
 from starlette.requests import Request
 
 from diddi_support.core.auth import (
@@ -13,6 +14,7 @@ from diddi_support.core.auth import (
     require_support_agent,
 )
 from diddi_support.core.config import settings
+from diddi_support.main import app
 
 
 def _request() -> Request:
@@ -83,3 +85,20 @@ def test_user_token_path_remains_compatible(monkeypatch) -> None:
 
     assert principal.subject == "agent-1"
     assert principal.permissions == frozenset({"diddi-support:read"})
+
+
+def test_delegated_service_principal_uses_route_scopes() -> None:
+    actor = "11111111-1111-4111-8111-111111111111"
+    app.dependency_overrides[require_support_agent] = lambda: BackofficePrincipal(
+        subject=actor,
+        permissions=frozenset({"diddi-support:read"}),
+        service_subject="service:diddiadmin",
+        client_id="diddiadmin-client",
+    )
+    try:
+        response = TestClient(app).get("/support/v1/backoffice/cases")
+    finally:
+        app.dependency_overrides.pop(require_support_agent, None)
+
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
