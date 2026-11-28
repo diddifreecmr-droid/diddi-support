@@ -59,6 +59,8 @@ documentation, validation Docker et redeploiement.
 - `BACKOFFICE_AUDIENCE` : audience JWT attendue pour les agents du Backoffice.
 - `BACKOFFICE_SERVICE_CLIENT_IDS` : allowlist globale, séparée par des virgules,
   des client IDs autorisés à utiliser le token service Backoffice.
+- En staging, la valeur raccordée est `backoffice-staging-diddisupport` ;
+  l'endpoint token, l'issuer et le JWKS sont ceux d'auth-staging DiddiFreeID.
 
 ## Dispatcher outbox
 

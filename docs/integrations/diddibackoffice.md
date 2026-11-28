@@ -48,7 +48,8 @@ X-Request-ID: <correlation-id>
 ```
 
 Le token doit être actif, de type service, destiné à l'audience Support et
-porter les scopes `diddi-support:*` nécessaires. Le client ID doit appartenir
+porter les scopes explicites nécessaires (`diddi-support:read` et
+`diddi-support:write` sont ceux actuellement configurés en staging). Le client ID doit appartenir
 à l'allowlist globale `BACKOFFICE_SERVICE_CLIENT_IDS`. `X-Backoffice-Actor`
 est un UUID d'agent et est obligatoire avec un token service. `X-Backoffice-Reason`
 est facultatif ; lorsqu'il est présent, il est enregistré dans l'audit et sa
@@ -57,6 +58,20 @@ longueur maximale est de 200 caractères.
 Chaque réponse DiddiSupport contient `X-Request-ID`. La valeur reprend le
 header entrant ou est générée comme UUID v4. L'application et le proxy doivent
 préserver ce header de bout en bout.
+
+Configuration DiddiFreeID staging actuellement raccordée :
+
+- client ID : `backoffice-staging-diddisupport` ;
+- issuer : `diddifree-id` ;
+- audience : `diddi-support` ;
+- endpoint token : `https://auth-staging.diddifree.com/identity/v1/auth/service/token` ;
+- JWKS : `https://auth-staging.diddifree.com/identity/v1/.well-known/jwks.json` ;
+- durée de vie du token : 600 secondes.
+
+Le token staging actuel ne porte pas de scope wildcard. Les routes demandant
+`diddi-support:assign`, `diddi-support:reply`, `diddi-support:sos-operate` ou
+`diddi-support:attachments-read` nécessitent une extension explicite des scopes
+FreeID avant d'être utilisées par ce client.
 
 ### Appel avec JWT d'agent
 

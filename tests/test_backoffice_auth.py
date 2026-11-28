@@ -26,7 +26,11 @@ def _token(token_type: str) -> str:
 
 
 def test_service_token_is_converted_to_delegated_backoffice_principal(monkeypatch) -> None:
-    monkeypatch.setattr(settings, "backoffice_service_client_ids", "diddiadmin-client")
+    monkeypatch.setattr(
+        settings,
+        "backoffice_service_client_ids",
+        "backoffice-staging-diddisupport",
+    )
     monkeypatch.setattr(
         ServiceTokenVerifier,
         "verify",
@@ -41,7 +45,7 @@ def test_service_token_is_converted_to_delegated_backoffice_principal(monkeypatc
     principal = require_support_agent(
         _request(),
         authorization=f"Bearer {_token('service')}",
-        client_id="diddiadmin-client",
+        client_id="backoffice-staging-diddisupport",
         actor=actor,
         reason="Review case",
     )
@@ -50,7 +54,7 @@ def test_service_token_is_converted_to_delegated_backoffice_principal(monkeypatc
         subject=actor,
         permissions=frozenset({"diddi-support:read", "diddi-support:write"}),
         service_subject="service:diddiadmin",
-        client_id="diddiadmin-client",
+        client_id="backoffice-staging-diddisupport",
         reason="Review case",
     )
     assert UUID(principal.subject)
@@ -63,7 +67,7 @@ def test_service_token_requires_global_client_allowlist(monkeypatch) -> None:
         require_support_agent(
             _request(),
             authorization=f"Bearer {_token('service')}",
-            client_id="diddiadmin-client",
+            client_id="backoffice-staging-diddisupport",
             actor="11111111-1111-4111-8111-111111111111",
         )
 
@@ -93,7 +97,7 @@ def test_delegated_service_principal_uses_route_scopes() -> None:
         subject=actor,
         permissions=frozenset({"diddi-support:read"}),
         service_subject="service:diddiadmin",
-        client_id="diddiadmin-client",
+        client_id="backoffice-staging-diddisupport",
     )
     try:
         response = TestClient(app).get("/support/v1/backoffice/cases")

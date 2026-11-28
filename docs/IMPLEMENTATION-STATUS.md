@@ -29,8 +29,8 @@ La suite ciblée peut être exécutée avec `python -m pytest -q`.
 
 ## Vérifications de déploiement en attente
 
-- Configurer `BACKOFFICE_SERVICE_CLIENT_IDS` avec le client ID DiddiAdmin global
-  autorisé, sans versionner de secret.
+- Configurer `BACKOFFICE_SERVICE_CLIENT_IDS` avec
+  `backoffice-staging-diddisupport`, sans versionner de secret.
 - Déployer via le workflow Portainer existant, puis vérifier `support-migrate`
   en `Exited (0)`, l'API healthy et le worker healthy.
 - Depuis le BFF DiddiAdmin, appeler `GET /support/v1/backoffice/cases` avec un

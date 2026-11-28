@@ -7,7 +7,10 @@
 - P4-B : EN ATTENTE ; vérification staging/Portainer non exécutée selon la
   consigne du run et faute de credentials FreeID/BFF disponibles.
 - Décisions « Agent, à valider » : aucune.
-- Contrats à valider : parcours réel DiddiAdmin BFF → DiddiSupport et
+- Contrat FreeID staging confirmé par l'utilisateur : client
+  `backoffice-staging-diddisupport`, subject `service:diddiadmin`, audience
+  `diddi-support`, scopes `read`/`write`, issuer/JWKS et endpoint token connus.
+- Contrats encore à valider : parcours réel DiddiAdmin BFF → DiddiSupport et
   préservation du header par le proxy.
 - Vérifications en attente : déploiement contrôlé, migration `support-migrate`,
   santé API/worker et test réel du token service.
