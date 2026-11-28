@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from uuid import UUID
 
@@ -7,7 +8,7 @@ import jwt
 from fastapi import Header, Request
 from jwt import InvalidTokenError, PyJWKClient
 
-from diddi_support.core.audit_context import set_backoffice_reason
+from diddi_support.core.audit_context import reset_backoffice_reason, set_backoffice_reason
 from diddi_support.core.config import settings
 
 
@@ -130,7 +131,7 @@ class BackofficeTokenVerifier:
         return BackofficePrincipal(subject=str(claims["sub"]), permissions=permissions)
 
 
-def require_support_agent(
+def _authenticate_support_agent(
     request: Request,
     authorization: str | None = Header(default=None, alias="Authorization"),
     client_id: str | None = Header(default=None, alias="X-Client-ID"),
@@ -170,7 +171,6 @@ def require_support_agent(
             raise ServiceAuthenticationError("BACKOFFICE_ACTOR_INVALID") from exc
         if reason is not None and len(reason) > 200:
             raise ServiceAuthenticationError("BACKOFFICE_REASON_INVALID")
-        request.state.backoffice_reason_token = set_backoffice_reason(reason)
         return BackofficePrincipal(
             subject=actor,
             permissions=service_principal.scopes,
@@ -184,3 +184,29 @@ def require_support_agent(
         issuer=settings.identity_issuer,
         audience=settings.backoffice_audience,
     ).verify(token)
+
+
+async def require_support_agent(
+    request: Request,
+    authorization: str | None = Header(default=None, alias="Authorization"),
+    client_id: str | None = Header(default=None, alias="X-Client-ID"),
+    actor: str | None = Header(default=None, alias="X-Backoffice-Actor"),
+    reason: str | None = Header(default=None, alias="X-Backoffice-Reason"),
+) -> AsyncIterator[BackofficePrincipal]:
+    """Authenticate and keep the audit reason in the route's async context."""
+    principal = _authenticate_support_agent(
+        request=request,
+        authorization=authorization,
+        client_id=client_id,
+        actor=actor,
+        reason=reason,
+    )
+    if principal.service_subject is None:
+        yield principal
+        return
+
+    token = set_backoffice_reason(principal.reason)
+    try:
+        yield principal
+    finally:
+        reset_backoffice_reason(token)

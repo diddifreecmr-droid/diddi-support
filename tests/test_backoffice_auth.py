@@ -5,16 +5,19 @@ import pytest
 from fastapi.testclient import TestClient
 from starlette.requests import Request
 
+from diddi_support.core.audit_context import get_backoffice_reason
 from diddi_support.core.auth import (
     BackofficePrincipal,
     BackofficeTokenVerifier,
     ServiceAuthenticationError,
     ServicePrincipal,
     ServiceTokenVerifier,
+    _authenticate_support_agent,
     require_support_agent,
 )
 from diddi_support.core.config import settings
 from diddi_support.main import app
+from diddi_support.presentation import internal_router
 
 
 def _request() -> Request:
@@ -26,7 +29,11 @@ def _token(token_type: str) -> str:
 
 
 def test_service_token_is_converted_to_delegated_backoffice_principal(monkeypatch) -> None:
-    monkeypatch.setattr(settings, "backoffice_service_client_ids", "diddiadmin-client")
+    monkeypatch.setattr(
+        settings,
+        "backoffice_service_client_ids",
+        "backoffice-staging-diddisupport",
+    )
     monkeypatch.setattr(
         ServiceTokenVerifier,
         "verify",
@@ -38,10 +45,10 @@ def test_service_token_is_converted_to_delegated_backoffice_principal(monkeypatc
     )
 
     actor = "11111111-1111-4111-8111-111111111111"
-    principal = require_support_agent(
+    principal = _authenticate_support_agent(
         _request(),
         authorization=f"Bearer {_token('service')}",
-        client_id="diddiadmin-client",
+        client_id="backoffice-staging-diddisupport",
         actor=actor,
         reason="Review case",
     )
@@ -50,7 +57,7 @@ def test_service_token_is_converted_to_delegated_backoffice_principal(monkeypatc
         subject=actor,
         permissions=frozenset({"diddi-support:read", "diddi-support:write"}),
         service_subject="service:diddiadmin",
-        client_id="diddiadmin-client",
+        client_id="backoffice-staging-diddisupport",
         reason="Review case",
     )
     assert UUID(principal.subject)
@@ -60,10 +67,10 @@ def test_service_token_requires_global_client_allowlist(monkeypatch) -> None:
     monkeypatch.setattr(settings, "backoffice_service_client_ids", "another-client")
 
     with pytest.raises(ServiceAuthenticationError, match="BACKOFFICE_CLIENT_ID_FORBIDDEN"):
-        require_support_agent(
+        _authenticate_support_agent(
             _request(),
             authorization=f"Bearer {_token('service')}",
-            client_id="diddiadmin-client",
+            client_id="backoffice-staging-diddisupport",
             actor="11111111-1111-4111-8111-111111111111",
         )
 
@@ -78,7 +85,7 @@ def test_user_token_path_remains_compatible(monkeypatch) -> None:
         ),
     )
 
-    principal = require_support_agent(
+    principal = _authenticate_support_agent(
         _request(),
         authorization=f"Bearer {_token('user')}",
     )
@@ -93,7 +100,7 @@ def test_delegated_service_principal_uses_route_scopes() -> None:
         subject=actor,
         permissions=frozenset({"diddi-support:read"}),
         service_subject="service:diddiadmin",
-        client_id="diddiadmin-client",
+        client_id="backoffice-staging-diddisupport",
     )
     try:
         response = TestClient(app).get("/support/v1/backoffice/cases")
@@ -102,3 +109,40 @@ def test_delegated_service_principal_uses_route_scopes() -> None:
 
     assert response.status_code == 200
     assert isinstance(response.json(), list)
+
+
+def test_real_app_service_token_call_keeps_reason_in_route_context(monkeypatch) -> None:
+    monkeypatch.setattr(
+        settings,
+        "backoffice_service_client_ids",
+        "backoffice-staging-diddisupport",
+    )
+    monkeypatch.setattr(
+        ServiceTokenVerifier,
+        "verify",
+        lambda self, token, client_id: ServicePrincipal(
+            subject="service:diddiadmin",
+            client_id=client_id,
+            scopes=frozenset({"diddi-support:read"}),
+        ),
+    )
+    seen_reasons: list[str | None] = []
+    monkeypatch.setattr(
+        internal_router.case_service.repository,
+        "list",
+        lambda **kwargs: (seen_reasons.append(get_backoffice_reason()) or []),
+    )
+
+    actor = "11111111-1111-4111-8111-111111111111"
+    response = TestClient(app).get(
+        "/support/v1/backoffice/cases",
+        headers={
+            "Authorization": f"Bearer {_token('service')}",
+            "X-Client-ID": "backoffice-staging-diddisupport",
+            "X-Backoffice-Actor": actor,
+            "X-Backoffice-Reason": "Review case",
+        },
+    )
+
+    assert response.status_code == 200
+    assert seen_reasons == ["Review case"]

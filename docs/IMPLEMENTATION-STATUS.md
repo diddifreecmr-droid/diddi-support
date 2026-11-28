@@ -2,7 +2,7 @@
 
 - Plan : `IMPLEMENTATION_PLAN_2026-11-28_CORRELATION_BACKOFFICE_AUTH.md`
 - Branche : `codex/diddi-support-2026-11-28`
-- Statut : implémentation locale terminée ; vérification externe en attente
+- Statut : correctif local terminé ; redéploiement staging nécessaire
 - Dernière mise à jour : 2026-11-28
 
 ## Vérifications du projet
@@ -25,12 +25,14 @@ La suite ciblée peut être exécutée avec `python -m pytest -q`.
 - P1 : terminé ; middleware global et tests contractuels livrés
 - P2 : terminé ; authentification duale, audit de raison et tests de routes livrés
 - P3 : terminé ; contrats, OpenAPI et non-régression livrés
-- P4 : P4-A terminé ; P4-B EN ATTENTE, aucun déploiement exécuté
+- P4 : P4-A terminé ; P4-B test staging exécuté, échec 500 diagnostiqué et corrigé
 
 ## Vérifications de déploiement en attente
 
-- Configurer `BACKOFFICE_SERVICE_CLIENT_IDS` avec le client ID DiddiAdmin global
-  autorisé, sans versionner de secret.
+- Redéployer la branche contenant les correctifs `b4cfc63` et le commit suivant
+  via le workflow Portainer
+  existant ; la configuration active contient déjà `BACKOFFICE_SERVICE_CLIENT_IDS`
+  avec `backoffice-staging-diddisupport`.
 - Déployer via le workflow Portainer existant, puis vérifier `support-migrate`
   en `Exited (0)`, l'API healthy et le worker healthy.
 - Depuis le BFF DiddiAdmin, appeler `GET /support/v1/backoffice/cases` avec un
@@ -42,4 +44,14 @@ La suite ciblée peut être exécutée avec `python -m pytest -q`.
 
 ## Blocages
 
-- Aucun blocage connu.
+- Test staging effectué : le token DiddiFreeID est valide et contient les
+  scopes `read`, `write`, `assign`, `reply`, `sos-operate` et
+  `attachments-read`.
+- La configuration Portainer active contient bien
+  `BACKOFFICE_SERVICE_CLIENT_IDS=backoffice-staging-diddisupport`.
+- L'appel autorisé atteint l'API mais renvoie `500`. La cause racine dans les
+  logs est un `ValueError` lors du reset d'un `ContextVar` créé dans un autre
+  contexte d'exécution (`request_id_middleware`). Le correctif est `b4cfc63`.
+- Sur cet appel, le proxy n'a pas renvoyé `X-Request-ID` car l'exception est
+  survenue pendant la finalisation du middleware ; la vérification doit être
+  rejouée après redéploiement.
