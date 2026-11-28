@@ -29,6 +29,7 @@ class HttpContextProvider:
         token_url: str = "",
         client_secret: str = "",
         audience: str = "",
+        path_template: str = "/internal/v1/support/{resource_type}/{resource_id}/context",
         transport: httpx.AsyncBaseTransport | None = None,
     ) -> None:
         self.base_url = base_url.rstrip("/")
@@ -39,6 +40,7 @@ class HttpContextProvider:
         self.token_url = token_url
         self.client_secret = client_secret
         self.audience = audience
+        self.path_template = path_template
         self.transport = transport
         self._token_cache: tuple[str, float] | None = None
         self._token_lock = asyncio.Lock()
@@ -93,7 +95,10 @@ class HttpContextProvider:
         resource_id: UUID,
         request_id: str | None,
     ) -> BusinessContext:
-        path = f"/internal/v1/support/{quote(resource_type, safe='')}/{resource_id}/context"
+        path = self.path_template.format(
+            resource_type=quote(resource_type, safe=""),
+            resource_id=resource_id,
+        )
         headers = {
             "Accept": "application/json",
             "X-Support-Context-Scope": self.scope,
@@ -201,5 +206,6 @@ def providers_from_settings() -> dict[str, HttpContextProvider]:
             client_id=settings.diddisupport_diddishop_service_client_id,
             client_secret=settings.diddisupport_diddishop_service_client_secret,
             audience=settings.diddisupport_diddishop_service_audience,
+            path_template="/internal/v1/support/orders/{resource_id}/context",
         )
     return providers

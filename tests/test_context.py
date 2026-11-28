@@ -37,6 +37,38 @@ def test_diddishop_connector_is_built_from_service_settings(monkeypatch: pytest.
     assert providers["diddishop"].base_url == "http://diddishop"
     assert providers["diddishop"].scope == "diddishop:support-context:read"
     assert providers["diddishop"].audience == "diddishop"
+    assert providers["diddishop"].path_template == "/internal/v1/support/orders/{resource_id}/context"
+
+
+@pytest.mark.asyncio
+async def test_diddishop_context_provider_uses_orders_endpoint() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == f"/internal/v1/support/orders/{RIDE_ID}/context"
+        return httpx.Response(
+            200,
+            json={
+                "protocol": "diddi.context.v1",
+                "origin_service": "diddishop",
+                "resource_type": "order",
+                "resource_id": str(RIDE_ID),
+                "data": {"status": "paid"},
+                "redacted_fields": [],
+                "as_of": "2026-11-28T10:00:00Z",
+                "fetched_at": "2026-11-28T10:00:01Z",
+            },
+        )
+
+    provider = HttpContextProvider(
+        base_url="https://diddishop-backend.diddifree.com",
+        scope="diddishop:support-context:read",
+        path_template="/internal/v1/support/orders/{resource_id}/context",
+        transport=httpx.MockTransport(handler),
+    )
+
+    context = await provider.fetch(resource_type="order", resource_id=RIDE_ID, request_id="req-shop")
+
+    assert context.origin_service == "diddishop"
+    assert context.resource_type == "order"
 
 
 def test_service_identity_claims_require_consistent_service_subject() -> None:
