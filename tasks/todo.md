@@ -8,7 +8,7 @@ Plan : `IMPLEMENTATION_PLAN_2026-11-28_CORRELATION_BACKOFFICE_AUTH.md`
 - [x] P0 — Figer l'identité et établir la baseline
   - [x] P0-A — Créer le suivi et établir les commandes de vérification
   - [x] P0-B — Vérifier la baseline et les contrats existants
-- [ ] P1 — Corrélation `X-Request-ID`
+- [x] P1 — Corrélation `X-Request-ID`
   - [x] P1-A — Implémenter la corrélation globale des réponses
   - [x] P1-B — Tester les réponses normales et d'erreur
 - [x] P2 — Authentification Backoffice par token de service
