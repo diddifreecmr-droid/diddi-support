@@ -29,7 +29,8 @@ La suite ciblée peut être exécutée avec `python -m pytest -q`.
 
 ## Vérifications de déploiement en attente
 
-- Redéployer la branche contenant le correctif `b4cfc63` via le workflow Portainer
+- Redéployer la branche contenant les correctifs `b4cfc63` et le commit suivant
+  via le workflow Portainer
   existant ; la configuration active contient déjà `BACKOFFICE_SERVICE_CLIENT_IDS`
   avec `backoffice-staging-diddisupport`.
 - Déployer via le workflow Portainer existant, puis vérifier `support-migrate`

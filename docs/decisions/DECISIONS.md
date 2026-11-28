@@ -132,3 +132,17 @@ nouvelle ne modifie jamais silencieusement une décision existante.
 - Alternatives écartées : supposer qu'un wildcard couvre toutes les routes.
 - Source : Utilisateur
 - Impact : permissions Backoffice, tests staging et parcours d'écriture.
+
+### D-15 — Contexte d'audit dans la dépendance asynchrone
+- Date : 2026-11-28
+- Phase / sous-lot : P4-B
+- Décision : transformer la dépendance Backoffice en dépendance génératrice
+  asynchrone ; elle établit et réinitialise le `ContextVar` dans le même
+  contexte que la route, afin que la raison soit visible par le dépôt.
+- Pourquoi : la dépendance synchrone était exécutée dans un thread et son token
+  ne pouvait pas être réinitialisé par le middleware ; le ticket 115 confirme
+  aussi que la raison pouvait ne pas atteindre l'audit.
+- Alternatives écartées : ignorer l'erreur de reset uniquement ; passer la
+  raison explicitement à chaque méthode de dépôt.
+- Source : Ticket 115 et logs staging
+- Impact : authentification Backoffice, middleware, contexte d'audit, tests.
