@@ -1,7 +1,10 @@
 from pathlib import Path
+from uuid import uuid4
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
+from starlette.requests import Request
+from starlette.responses import Response
 
 from diddi_support.core.auth import ServiceAuthenticationError
 from diddi_support.core.config import settings
@@ -17,6 +20,19 @@ manifest = load_manifest(Path(settings.manifest_path))
 app = FastAPI(title=settings.app_name, version=manifest.version)
 app.include_router(internal_router)
 app.include_router(backoffice_router)
+
+
+@app.middleware("http")
+async def request_id_middleware(request: Request, call_next) -> Response:
+    request_id = request.headers.get("X-Request-ID") or str(uuid4())
+    request.scope["headers"] = [
+        (name, value)
+        for name, value in request.scope["headers"]
+        if name.lower() != b"x-request-id"
+    ] + [(b"x-request-id", request_id.encode("latin-1"))]
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request_id
+    return response
 
 
 @app.exception_handler(ServiceAuthenticationError)

@@ -2,7 +2,7 @@
 
 - Plan : `IMPLEMENTATION_PLAN_2026-11-28_CORRELATION_BACKOFFICE_AUTH.md`
 - Branche : `codex/diddi-support-2026-11-28`
-- Statut : en cours — P0 terminé, P1 en cours
+- Statut : en cours — P0 terminé, P1-A terminé
 - Dernière mise à jour : 2026-11-28
 
 ## Vérifications du projet
@@ -22,7 +22,7 @@ La suite ciblée peut être exécutée avec `python -m pytest -q`.
 ## Progression
 
 - P0 : terminé ; 55 tests passent, lint bloqué par 3 E501 préexistants
-- P1 : en attente
+- P1 : en cours ; middleware global livré, tests contractuels en cours
 - P2 : en attente
 - P3 : en attente
 - P4 : en attente
