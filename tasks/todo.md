@@ -10,7 +10,7 @@ Plan : `IMPLEMENTATION_PLAN_2026-11-28_CORRELATION_BACKOFFICE_AUTH.md`
   - [x] P0-B — Vérifier la baseline et les contrats existants
 - [ ] P1 — Corrélation `X-Request-ID`
   - [x] P1-A — Implémenter la corrélation globale des réponses
-  - [ ] P1-B — Tester les réponses normales et d'erreur
+  - [x] P1-B — Tester les réponses normales et d'erreur
 - [ ] P2 — Authentification Backoffice par token de service
   - [ ] P2-A — Introduire l'authentification duale
   - [ ] P2-B — Propager l'acteur, la raison et l'audit
