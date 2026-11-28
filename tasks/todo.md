@@ -12,7 +12,7 @@ Plan : `IMPLEMENTATION_PLAN_2026-11-28_CORRELATION_BACKOFFICE_AUTH.md`
   - [x] P1-A — Implémenter la corrélation globale des réponses
   - [x] P1-B — Tester les réponses normales et d'erreur
 - [ ] P2 — Authentification Backoffice par token de service
-  - [ ] P2-A — Introduire l'authentification duale
+  - [x] P2-A — Introduire l'authentification duale
   - [ ] P2-B — Propager l'acteur, la raison et l'audit
   - [ ] P2-C — Tester les scopes et la compatibilité JWT utilisateur
 - [ ] P3 — Contrats, OpenAPI et tests d'intégration

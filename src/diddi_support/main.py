@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from starlette.requests import Request
 from starlette.responses import Response
 
+from diddi_support.core.audit_context import reset_backoffice_reason
 from diddi_support.core.auth import ServiceAuthenticationError
 from diddi_support.core.config import settings
 from diddi_support.core.manifest import load_manifest
@@ -30,7 +31,12 @@ async def request_id_middleware(request: Request, call_next) -> Response:
         for name, value in request.scope["headers"]
         if name.lower() != b"x-request-id"
     ] + [(b"x-request-id", request_id.encode("latin-1"))]
-    response = await call_next(request)
+    try:
+        response = await call_next(request)
+    finally:
+        token = getattr(request.state, "backoffice_reason_token", None)
+        if token is not None:
+            reset_backoffice_reason(token)
     response.headers["X-Request-ID"] = request_id
     return response
 

@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from uuid import UUID
 
 import jwt
-from fastapi import Header
+from fastapi import Header, Request
 from jwt import InvalidTokenError, PyJWKClient
 
+from diddi_support.core.audit_context import set_backoffice_reason
 from diddi_support.core.config import settings
 
 
@@ -20,6 +22,9 @@ class ServicePrincipal:
 class BackofficePrincipal:
     subject: str
     permissions: frozenset[str]
+    service_subject: str | None = None
+    client_id: str | None = None
+    reason: str | None = None
 
 
 class ServiceAuthenticationError(ValueError):
@@ -126,11 +131,54 @@ class BackofficeTokenVerifier:
 
 
 def require_support_agent(
+    request: Request,
     authorization: str | None = Header(default=None, alias="Authorization"),
+    client_id: str | None = Header(default=None, alias="X-Client-ID"),
+    actor: str | None = Header(default=None, alias="X-Backoffice-Actor"),
+    reason: str | None = Header(default=None, alias="X-Backoffice-Reason"),
 ) -> BackofficePrincipal:
     if not authorization or not authorization.startswith("Bearer "):
         raise ServiceAuthenticationError("BACKOFFICE_TOKEN_REQUIRED")
     token = authorization.removeprefix("Bearer ").strip()
+    try:
+        unverified_claims = jwt.decode(token, options={"verify_signature": False})
+    except InvalidTokenError as exc:
+        raise ServiceAuthenticationError("BACKOFFICE_TOKEN_INVALID") from exc
+
+    if unverified_claims.get("token_type") == "service":
+        if not client_id:
+            raise ServiceAuthenticationError("SERVICE_CLIENT_ID_INVALID")
+        allowed_client_ids = frozenset(
+            item.strip()
+            for item in settings.backoffice_service_client_ids.split(",")
+            if item.strip()
+        )
+        if client_id not in allowed_client_ids:
+            raise ServiceAuthenticationError("BACKOFFICE_CLIENT_ID_FORBIDDEN")
+        service_principal = ServiceTokenVerifier(
+            jwks_url=settings.identity_jwks_url,
+            issuer=settings.identity_issuer,
+            audience=settings.service_audience,
+        ).verify(token, client_id)
+        if service_principal.subject != "service:diddiadmin":
+            raise ServiceAuthenticationError("BACKOFFICE_SERVICE_FORBIDDEN")
+        if not actor:
+            raise ServiceAuthenticationError("BACKOFFICE_ACTOR_REQUIRED")
+        try:
+            UUID(actor)
+        except ValueError as exc:
+            raise ServiceAuthenticationError("BACKOFFICE_ACTOR_INVALID") from exc
+        if reason is not None and len(reason) > 200:
+            raise ServiceAuthenticationError("BACKOFFICE_REASON_INVALID")
+        request.state.backoffice_reason_token = set_backoffice_reason(reason)
+        return BackofficePrincipal(
+            subject=actor,
+            permissions=service_principal.scopes,
+            service_subject=service_principal.subject,
+            client_id=client_id,
+            reason=reason,
+        )
+
     return BackofficeTokenVerifier(
         jwks_url=settings.identity_jwks_url,
         issuer=settings.identity_issuer,
