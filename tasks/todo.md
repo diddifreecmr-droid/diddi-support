@@ -18,9 +18,9 @@ Plan : `IMPLEMENTATION_PLAN_2026-11-28_CORRELATION_BACKOFFICE_AUTH.md`
 - [x] P3 — Contrats, OpenAPI et tests d'intégration
   - [x] P3-A — Mettre à jour les contrats et l'OpenAPI
   - [x] P3-B — Compléter les tests de contrat et de non-régression
-- [ ] P4 — Vérification staging et livraison contrôlée
-  - [ ] P4-A — Préparer la vérification de livraison
-  - [ ] P4-B — Vérifier staging/Portainer lorsque l'exécution sera autorisée
+- [x] P4 — Vérification staging et livraison contrôlée (P4-B en attente externe)
+  - [x] P4-A — Préparer la vérification de livraison
+  - [ ] P4-B — Vérifier staging/Portainer lorsque l'exécution sera autorisée — EN ATTENTE
 
 ## Vérifications de déploiement en attente
 
