@@ -48,9 +48,15 @@ X-Request-ID: <correlation-id>
 ```
 
 Le token doit être actif, de type service, destiné à l'audience Support et
-porter les scopes `diddi-support:*` nécessaires. `X-Backoffice-Actor` est un
-UUID d'agent et `X-Backoffice-Reason` est obligatoire pour l'audit, avec une
-longueur maximale de 200 caractères.
+porter les scopes `diddi-support:*` nécessaires. Le client ID doit appartenir
+à l'allowlist globale `BACKOFFICE_SERVICE_CLIENT_IDS`. `X-Backoffice-Actor`
+est un UUID d'agent et est obligatoire avec un token service. `X-Backoffice-Reason`
+est facultatif ; lorsqu'il est présent, il est enregistré dans l'audit et sa
+longueur maximale est de 200 caractères.
+
+Chaque réponse DiddiSupport contient `X-Request-ID`. La valeur reprend le
+header entrant ou est générée comme UUID v4. L'application et le proxy doivent
+préserver ce header de bout en bout.
 
 ### Appel avec JWT d'agent
 

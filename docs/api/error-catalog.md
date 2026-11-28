@@ -23,3 +23,10 @@
 | `CONTEXT_AUTHENTICATION_FAILED` | Le token service DiddiFreeID n'a pas pu être obtenu |
 | `SUPPORT_RESOURCE_REFERENCE_INCOMPLETE` | Une référence métier contient seulement une partie des trois champs requis |
 | `CASE_NOT_MODIFIABLE` | Le dossier résolu ou fermé n'accepte plus de nouveau message |
+| `BACKOFFICE_TOKEN_REQUIRED` | JWT utilisateur ou token service Backoffice absent |
+| `BACKOFFICE_TOKEN_INVALID` | Jeton Backoffice invalide ou inactif |
+| `BACKOFFICE_CLIENT_ID_FORBIDDEN` | Client ID absent de l'allowlist globale Backoffice |
+| `BACKOFFICE_SERVICE_FORBIDDEN` | Identité service différente de `service:diddiadmin` |
+| `BACKOFFICE_ACTOR_REQUIRED` | Acteur délégué absent pour un token service |
+| `BACKOFFICE_ACTOR_INVALID` | Acteur délégué non conforme à un UUID |
+| `BACKOFFICE_REASON_INVALID` | Raison Backoffice trop longue |

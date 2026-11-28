@@ -24,9 +24,12 @@ Tout token service doit également présenter une identité cohérente :
 `service:<nom>` et un claim `service` identique à `<nom>`. L'audience, l'émetteur
 et l'expiration sont vérifiés par DiddiFreeID/JWT.
 
-Pour le Backoffice, l'agent doit présenter un JWT utilisateur actif destiné à
-`BACKOFFICE_AUDIENCE` et posséder `diddi-support:read`. Les scopes de service
-et les permissions d'agent ne sont pas interchangeables.
+Pour le Backoffice, l'agent peut présenter soit un JWT utilisateur actif destiné
+à `BACKOFFICE_AUDIENCE`, soit un token service représentant exactement
+`service:diddiadmin`, avec un `X-Client-ID` présent dans
+`BACKOFFICE_SERVICE_CLIENT_IDS` et les scopes `diddi-support:*` requis. Les
+scopes de service sont convertis en permissions de route uniquement pour ce
+parcours délégué ; ils ne sont pas interchangeables avec les autres services.
 
 Les actions d'écriture sont séparées : `diddi-support:assign` pour affecter un
 dossier et `diddi-support:write` pour changer son statut.

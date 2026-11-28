@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     identity_issuer: str = "diddifree-id"
     service_audience: str = "diddi-support"
     backoffice_audience: str = "diddi-comms-backoffice"
+    backoffice_service_client_ids: str = ""
     database_url: str = ""
     redis_url: str = ""
     outbox_stream_name: str = "diddisupport.events"

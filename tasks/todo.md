@@ -1,0 +1,33 @@
+# Suivi d'implémentation — DiddiSupport
+
+Branche : `codex/diddi-support-2026-11-28`
+Plan : `IMPLEMENTATION_PLAN_2026-11-28_CORRELATION_BACKOFFICE_AUTH.md`
+
+## Phases
+
+- [x] P0 — Figer l'identité et établir la baseline
+  - [x] P0-A — Créer le suivi et établir les commandes de vérification
+  - [x] P0-B — Vérifier la baseline et les contrats existants
+- [x] P1 — Corrélation `X-Request-ID`
+  - [x] P1-A — Implémenter la corrélation globale des réponses
+  - [x] P1-B — Tester les réponses normales et d'erreur
+- [x] P2 — Authentification Backoffice par token de service
+  - [x] P2-A — Introduire l'authentification duale
+  - [x] P2-B — Propager l'acteur, la raison et l'audit
+  - [x] P2-C — Tester les scopes et la compatibilité JWT utilisateur
+- [x] P3 — Contrats, OpenAPI et tests d'intégration
+  - [x] P3-A — Mettre à jour les contrats et l'OpenAPI
+  - [x] P3-B — Compléter les tests de contrat et de non-régression
+- [x] P4 — Vérification staging et livraison contrôlée (P4-B en attente externe)
+  - [x] P4-A — Préparer la vérification de livraison
+  - [ ] P4-B — Vérifier staging/Portainer lorsque l'exécution sera autorisée — EN ATTENTE
+
+## Vérifications de déploiement en attente
+
+- [ ] Vérifier le parcours réel DiddiAdmin BFF → DiddiSupport avec un token de service FreeID.
+- [ ] Vérifier la conservation de `X-Request-ID` par l'application et le proxy.
+- [ ] Vérifier API/worker/migration dans Portainer sans modifier de secret.
+
+## Idées hors plan
+
+- Aucune.
