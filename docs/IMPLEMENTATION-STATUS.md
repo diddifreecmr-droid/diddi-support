@@ -42,4 +42,12 @@ La suite ciblée peut être exécutée avec `python -m pytest -q`.
 
 ## Blocages
 
-- Aucun blocage connu.
+- Test staging effectué : le token DiddiFreeID est valide et contient les
+  scopes `read`, `write`, `assign`, `reply`, `sos-operate` et
+  `attachments-read`.
+- L'API staging répond `401 BACKOFFICE_CLIENT_ID_FORBIDDEN` pour
+  `backoffice-staging-diddisupport` : la variable
+  `BACKOFFICE_SERVICE_CLIENT_IDS` n'est pas encore configurée dans le
+  déploiement actif de DiddiSupport.
+- Le même `X-Request-ID` a été reçu dans la réponse, donc la corrélation
+  application/proxy est vérifiée sur cet appel.

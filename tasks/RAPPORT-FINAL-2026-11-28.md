@@ -14,5 +14,8 @@
   préservation du header par le proxy.
 - Vérifications en attente : déploiement contrôlé, migration `support-migrate`,
   santé API/worker et test réel du token service.
+- Test réel partiel : token DiddiFreeID valide avec les six scopes attendus ;
+  réponse staging `401 BACKOFFICE_CLIENT_ID_FORBIDDEN`. Le même
+  `X-Request-ID` a été retourné.
 - Tests non exécutés : aucun test local prévu par le projet ; seule la
   vérification externe de déploiement reste en attente.
